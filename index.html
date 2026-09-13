@@ -293,6 +293,51 @@ main{
 }
 
 /* ---------- overlay ---------- */
+/* ---------- tappable class info ---------- */
+.infodot{
+  display:none;margin-left:6px;flex:0 0 auto;
+  width:19px;height:19px;border-radius:50%;
+  border:1px solid var(--accent);color:var(--accent);
+  font-size:11px;font-weight:700;font-style:italic;
+  align-items:center;justify-content:center;
+}
+.bin.can-info .infodot,.icard.can-info .infodot{display:inline-flex}
+.bin.can-info,.icard.can-info{cursor:pointer}
+.bin.can-info:hover,.icard.can-info:hover{border-color:var(--accent)}
+.bin.can-info:focus-visible,.icard.can-info:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ihead{display:flex;align-items:center;gap:6px}
+.ihead h3{flex:1 1 auto}
+
+.closex{
+  position:absolute;top:14px;right:14px;
+  width:34px;height:34px;border-radius:8px;
+  border:1px solid var(--line);background:var(--panel);
+  font-size:20px;line-height:1;cursor:pointer;color:var(--muted);
+  touch-action:manipulation;
+}
+.closex:hover{border-color:var(--accent);color:var(--accent)}
+.closex:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sheet.info h2{margin-right:44px;margin-bottom:16px}
+.isec{margin:0 0 17px}
+.isec h3{
+  font-size:13px;font-weight:600;color:var(--accent);
+  margin:0 0 5px;letter-spacing:-.005em;
+}
+.isec p{margin:0;font-size:14px;line-height:1.55;max-width:62ch}
+.idiff{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.idiff li{
+  font-size:13.5px;line-height:1.5;
+  padding-left:11px;border-left:2px solid var(--line-soft);
+}
+.idiff b{font-weight:600;display:block;margin-bottom:1px}
+
+/* ---------- review mode ---------- */
+body.review .dock{display:none}
+body.review main{grid-template-columns:minmax(0,1fr)}
+body.review .stats,body.review #btn-counts,body.review #btn-restart{display:none}
+body.review .progwrap{visibility:hidden}
+#btn-review[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
 .overlay{
   position:fixed;inset:0;z-index:200;
   background:rgba(18,34,38,.5);
@@ -301,7 +346,7 @@ main{
 }
 .overlay[hidden]{display:none}
 .sheet{
-  background:var(--panel);border-radius:14px;
+  background:var(--panel);border-radius:14px;position:relative;
   max-width:560px;width:100%;max-height:86vh;overflow:auto;
   padding:24px 26px 22px;
   box-shadow:0 20px 60px rgba(10,25,30,.35);
@@ -425,6 +470,7 @@ main{
       <span class="stat" id="s-timewrap">Time <b id="s-time">0:00</b></span>
     </div>
     <button class="ghostbtn" id="btn-counts" aria-pressed="false">Show counts</button>
+    <button class="ghostbtn" id="btn-review" aria-pressed="false">Review</button>
     <button class="ghostbtn" id="btn-restart">Restart</button>
   </div>
   <div class="progwrap"><div class="progbar" id="progbar"></div></div>
@@ -473,8 +519,17 @@ main{
       <button class="btn sec" id="r-drill">Drill my misses</button>
       <button class="btn sec" id="r-next">Next round</button>
       <button class="btn sec" id="r-key">Show answer key</button>
+      <button class="btn sec" id="r-close">Close and explore</button>
     </div>
     <div class="key" id="r-keybox" hidden></div>
+  </div>
+</div>
+
+<div class="overlay" id="infolay" hidden>
+  <div class="sheet info" role="dialog" aria-modal="true" aria-labelledby="info-title">
+    <button class="closex" id="info-close" aria-label="Close">&times;</button>
+    <h2 id="info-title"></h2>
+    <div id="info-body"></div>
   </div>
 </div>
 
@@ -645,6 +700,471 @@ const INSULIN = {
   ]
 };
 
+/* ============================================================
+   CLASS CARDS
+   Structure follows the study guide: mechanism you could explain
+   to a patient, indication, key adverse reactions, nursing
+   implications, then what separates the drugs inside the class.
+   ============================================================ */
+
+const INFO = {
+
+/* ---- endocrine ---- */
+rapid:{
+  t:'Rapid-acting insulin',
+  how:'Insulin activates glucose transporters on the cell so glucose can move out of the blood and into the cell. To a patient: this is the insulin that covers the food you are about to eat. It starts working in about 15 minutes and is gone within a few hours.',
+  use:'Mealtime (bolus) coverage in type 1 and some type 2 diabetes, and correction doses for high readings.',
+  watch:'Hypoglycemia, and it arrives fast because onset is fast. Blood sugar under 50 to 60 mg/dL. Symptoms run headache, confusion, fatigue, then tachycardia, palpitations, sweating, nervousness, then seizures, coma, death. Also hypokalemia, since insulin drives potassium into the cell along with magnesium and phosphate.',
+  nursing:'Food must be in front of the patient. Give SC. Abdomen absorbs fastest and most consistently, so use the same locale each time and rotate sites within it. Each site no more than once a month, sites at least 1 inch apart. Failure to rotate causes lipohypertrophy, which makes absorption erratic. These are clear. They can be mixed with NPH only, and you draw clear before cloudy.',
+  differs:[
+    {n:'Lispro (Humalog)', d:'Onset 15-30 min, peak 0.5-2.5 hr, duration 3-6 hr. The most forgiving: can be given right before or even just after the meal.'},
+    {n:'Aspart (NovoLog)', d:'Onset 10-20 min, peak 1-5 hr, duration 3-5 hr. Give 5 to 10 min before the meal.'},
+    {n:'Glulisine (Apidra)', d:'Onset 10-15 min, peak 1-1.5 hr, duration 3-5 hr. Give 15 min before eating.'},
+    {n:'All three', d:'Usually SC, but have been given IV when necessary.'}
+  ]
+},
+short:{
+  t:'Short-acting insulin',
+  how:'Insulin that resembles natural human insulin. Same mechanism as the rapid analogs but slower on and longer lasting.',
+  use:'Mealtime coverage, and the insulin reached for IV in DKA and hyperkalemia.',
+  watch:'Hypoglycemia and hypokalemia. The longer duration means the hypoglycemia window is wider than with a rapid analog.',
+  nursing:'Must be given 30 to 60 minutes before a meal. That timing is the single detail separating it from the rapid analogs, and it is a common test item. Clear in appearance. Mixes with NPH, and premixed 70/30 and 50/50 NPH/regular formulations exist.',
+  differs:[
+    {n:'Regular (Humulin R, Novolin R)', d:'Onset 30 min to 1 hr, peak 1-5 hr, duration 6-10 hr.'},
+    {n:'The thing to remember', d:'This is the only insulin that can be safely given IV. If a question involves an insulin drip, it is this one.'}
+  ]
+},
+intermediate:{
+  t:'Intermediate-acting insulin',
+  how:'NPH is regular insulin linked to protamine, a large protein that slows absorption and stretches the action out over most of a day.',
+  use:'Background coverage, usually twice daily. The intermediate half of a conventional two-shot regimen.',
+  watch:'Hypoglycemia at the 6 to 14 hour peak. For a morning dose that lands in the late afternoon or overnight, so the patient needs to know when to expect it. Allergic reaction to the foreign protamine protein.',
+  nursing:'NPH is the only cloudy insulin. Roll it gently between your palms, never shake. It is also the only insulin that can be mixed with the short-acting insulins, and you draw the clear insulin into the syringe before the cloudy one so you do not contaminate the vial with protamine. SC only.',
+  differs:[
+    {n:'NPH (Humulin N, Novolin N)', d:'Onset 1-2 hr, peak 6-14 hr, duration 16-24 hr. Cloudy and mixable.'},
+    {n:'Insulin detemir (Levemir)', d:'Your slide lists it here. Most other sources call it long-acting basal insulin, and your deck never gives its onset, peak, or duration. Answer per the slide, but know the discrepancy exists.'}
+  ]
+},
+long:{
+  t:'Long-acting insulin',
+  how:'Modified human insulin made by recombinant DNA technology that releases at a flat, steady rate. To a patient: this one does not cover meals, it just keeps a baseline going all day.',
+  use:'Basal coverage, once daily. The foundation of a tight-control regimen of one long-acting plus three short-acting shots.',
+  watch:'Hypoglycemia risk is lower than with peaking insulins because there is no peak, but it is not zero.',
+  nursing:'SC only. Never mix it with another insulin and never give it IV. Same time every day. It is clear, so do not confuse the vial with regular insulin.',
+  differs:[
+    {n:'Glargine (Lantus)', d:'Onset 70 min, duration 24 hr, and it lacks a distinct peak. That missing peak is what gets asked about.'}
+  ]
+},
+rescue:{
+  t:'Hypoglycemia rescue',
+  how:'Glucagon is the hormone made by the alpha cells of the pancreas and its effects are the opposite of insulin. To a patient: this tells your liver to release the sugar it has in storage.',
+  use:'Insulin overdose and severe hypoglycemia. For an unconscious patient IV glucose is first choice; glucagon is used when IV glucose is not immediately available.',
+  watch:'The effect is short-lived. It also works poorly in starvation and in some newborns, especially preemies, because those patients have no large glycogen stores to mobilize.',
+  nursing:'Can be given IM, SC, or IV. Once the blood sugar is back in range you must follow with oral or IV glucose, or the patient drops again when the mobilized glycogen runs out. For a conscious patient, check the gag reflex first, then give glucose tabs, orange juice, sugar, honey, or non-diet soda.',
+  differs:[
+    {n:'Conscious vs unconscious', d:'Conscious and able to swallow: oral fast sugar. Unconscious: IV glucose first, glucagon second.'},
+    {n:'Why glucagon can fail', d:'No glycogen, no effect. This is the reason it is not reliable in a malnourished or alcoholic patient.'}
+  ]
+},
+sulfonylurea:{
+  t:'Sulfonylurea',
+  how:'Stimulates release of insulin from the pancreas. To a patient: this squeezes more insulin out of your own pancreas.',
+  use:'Type 2 diabetes, after diet and exercise have failed. Requires working beta cells, so it is useless in type 1.',
+  watch:'Hypoglycemia is the hallmark adverse effect, along with weight gain. Contraindicated in anyone with a history of sulfa allergy. Alcohol, NSAIDs, and H2 blockers increase hypoglycemia. Beta blockers block the effect by suppressing insulin release and mask the warning symptoms.',
+  nursing:'Give with meals. Ask about sulfa allergy before the first dose. Teach hypoglycemia symptoms and how to treat them, and make sure the patient carries fast sugar.',
+  differs:[
+    {n:'First generation', d:'Tolbutamide (Orinase), chlorpropamide (Diabinese).'},
+    {n:'Second generation', d:'Glyburide (Micronase), glipizide (Glucotrol), glimepiride (Amaryl). Glyburide is the one on your med list.'},
+    {n:'Versus meglitinides', d:'Same mechanism, but sulfonylureas are the ones contraindicated in sulfa allergy.'}
+  ]
+},
+meglitinide:{
+  t:'Meglitinide',
+  how:'Stimulates release of insulin from the beta cells of the pancreas. Same end result as a sulfonylurea, but shorter acting.',
+  use:'Type 2 diabetes, aimed at mealtime glucose.',
+  watch:'Hypoglycemia, and it is more common in patients with liver disease.',
+  nursing:'Give with meals. If the patient skips the meal, the dose is skipped too, since the drug is there to cover food.',
+  differs:[
+    {n:'Repaglinide (Prandin) and nateglinide (Starlix)', d:'Behave the same way.'},
+    {n:'The distinguishing point', d:'These are acceptable in patients allergic to sulfonamides, which is exactly where a sulfonylurea cannot go.'}
+  ]
+},
+biguanide:{
+  t:'Biguanide',
+  how:'Lowers glucose by decreasing glucose production in the liver. To a patient: this tells your liver to stop dumping extra sugar into your blood. It does not make your pancreas release insulin.',
+  use:'First-line drug for type 2 diabetes.',
+  watch:'Lactic acidosis is rare but carries 50 percent mortality, so avoid it in renal disease where toxic levels accumulate and in anyone prone to lactic acidosis. Alcohol raises that risk. Common effects are GI: nausea, diarrhea, loss of appetite. It also decreases absorption of B12 and folate.',
+  nursing:'Hold for 48 hours around IV contrast. Check renal function before and during therapy. Take with food to blunt the GI effects. Teach the patient that alcohol is a real risk here, not a formality.',
+  differs:[
+    {n:'Metformin (Glucophage)', d:'The only drug in the class on your list.'},
+    {n:'Why it matters for the exam', d:'This is the answer to which oral agent does not cause hypoglycemia. Because it never stimulates insulin secretion, it has no mechanism to push glucose below normal on its own.'}
+  ]
+},
+agi:{
+  t:'Alpha-glucosidase inhibitor',
+  how:'Delays absorption of dietary carbohydrate by inhibiting alpha-glucosidase, the gut enzyme that breaks complex sugars into absorbable ones. To a patient: this slows down how fast you absorb the carbs in your meal.',
+  use:'Type 2 diabetes, targeting the after-meal glucose spike.',
+  watch:'Flatulence and diarrhea are common, so avoid it in inflammatory bowel disease. Long-term use at high doses can cause liver dysfunction, so liver function tests get monitored.',
+  nursing:'Give with the first bite of each meal. The critical teaching point: if hypoglycemia occurs, treat it with pure glucose, never table sugar.',
+  differs:[
+    {n:'Acarbose (Precose) and miglitol (Glyset)', d:'Same mechanism.'},
+    {n:'Why glucose and not sugar', d:'Sucrose is glucose plus fructose bonded together and needs alpha-glucosidase to split it. This drug blocks that enzyme, so juice, candy, and soda will not raise the blood sugar in time. Glucose tabs or gel work because they need no digestion.'},
+    {n:'When does it even happen', d:'This class does not cause hypoglycemia alone. The scenario is a patient also taking insulin or a sulfonylurea.'}
+  ]
+},
+tzd:{
+  t:'Thiazolidinedione',
+  how:'Reduces insulin resistance. To a patient: this makes the insulin your body already has work better.',
+  use:'Type 2 diabetes.',
+  watch:'Fluid retention and weight gain, so use with caution in mild heart failure. Raises LDL and HDL and lowers triglycerides. Possible liver toxicity. Bladder cancer. Headache.',
+  nursing:'Monitor liver function. Daily weights, and teach the patient to report sudden weight gain, swelling, or shortness of breath, since those point at fluid retention rather than success.',
+  differs:[
+    {n:'Pioglitazone (Actos)', d:'The one on your med list.'},
+    {n:'Rosiglitazone', d:'Appears in the combination product Avandamet with metformin.'},
+    {n:'No hypoglycemia alone', d:'Like metformin, it does not stimulate insulin release.'}
+  ]
+},
+dpp4:{
+  t:'DPP-4 inhibitor (gliptin)',
+  how:'Enhances the effect of incretins, the gut hormones that stimulate glucose-dependent insulin release and suppress glucagon release.',
+  use:'Type 2 diabetes.',
+  watch:'Pancreatitis and hypersensitivity reactions.',
+  nursing:'No significant drug interactions, which is unusual and worth remembering. Teach the patient to report persistent severe abdominal pain immediately.',
+  differs:[
+    {n:'Sitagliptin (Januvia)', d:'The one on your list.'},
+    {n:'Glucose-dependent', d:'Because insulin is only released when glucose is already elevated, hypoglycemia risk is low when used alone. Same logic as the GLP-1 drugs.'}
+  ]
+},
+amylin:{
+  t:'Amylin analog',
+  how:'Analog of amylin, a peptide hormone made in the pancreas alongside insulin. It reduces after-meal glucose by delaying gastric emptying and decreasing glucagon secretion, and it suppresses appetite.',
+  use:'Used with insulin in both type 1 and type 2 diabetes. It is an add-on, never a replacement.',
+  watch:'Hypoglycemia, mostly because of the insulin it is paired with. Nausea and injection site reactions.',
+  nursing:'Subcutaneous injection before each meal, as a separate injection from the insulin. Do not mix them in one syringe.',
+  differs:[
+    {n:'Pramlintide (Symlin)', d:'The only drug in this class.'},
+    {n:'Easy to confuse', d:'Amylin comes from the beta cells, same as insulin. Glucagon comes from the alpha cells and does the opposite.'}
+  ]
+},
+glp1:{
+  t:'GLP-1 receptor agonist',
+  how:'Mimics the natural incretin hormone GLP-1. Six actions: increases glucose-dependent insulin secretion, suppresses glucagon release, slows gastric emptying, increases satiety, reduces appetite, promotes weight loss. These are not insulin.',
+  use:'Type 2 diabetes, chronic weight management in obesity or overweight with weight-related conditions, and cardiovascular risk reduction in selected patients.',
+  watch:'GI effects are most common and cluster during dose escalation: nausea, vomiting, diarrhea, constipation, abdominal pain, decreased appetite. They usually improve over several weeks. Serious effects are pancreatitis, gallbladder disease, acute kidney injury, and thyroid C-cell tumors, which carry a boxed warning. Contraindicated with a personal or family history of medullary thyroid carcinoma, MEN type 2, prior serious hypersensitivity, and pregnancy for weight-loss indications. Caution in severe gastroparesis, history of pancreatitis, and severe GI disease.',
+  nursing:'Most are weekly subcutaneous injections, so rotate sites. Teach the patient to report persistent severe abdominal pain immediately, since that is the pancreatitis signal. Push fluids and report persistent vomiting or diarrhea, because the kidney injury shows up mostly in patients who got dehydrated. Slowed gastric emptying can change the absorption of other oral drugs. The insulin or sulfonylurea dose may need to come down to avoid hypoglycemia.',
+  differs:[
+    {n:'Semaglutide (Ozempic)', d:'Weekly SC for type 2 diabetes, and it reduces major cardiovascular events in patients with established cardiovascular disease.'},
+    {n:'Semaglutide (Wegovy)', d:'Weekly SC, dosed above 1 mg, for chronic weight management.'},
+    {n:'Semaglutide (Rybelsus)', d:'The oral form. Everything else in this class is injected.'},
+    {n:'Exenatide (Byetta)', d:'The outlier on schedule: twice daily, within 60 minutes before the morning and evening meals.'},
+    {n:'Low hypoglycemia risk', d:'Insulin is released only when blood glucose is elevated, so used alone these rarely cause hypoglycemia. They also cause weight loss, unlike insulin and sulfonylureas which cause weight gain.'}
+  ]
+},
+dual:{
+  t:'Dual GIP/GLP-1 agonist',
+  how:'Activates both the GIP and the GLP-1 receptor. The actions are the same list as a GLP-1 agonist, but delivered through two incretin receptors instead of one.',
+  use:'Type 2 diabetes (Mounjaro). Chronic weight management and moderate-to-severe obstructive sleep apnea in adults with obesity (Zepbound).',
+  watch:'Same profile as the GLP-1 agonists, boxed warning for thyroid C-cell tumors included. Same contraindications: medullary thyroid carcinoma, MEN type 2, prior serious hypersensitivity.',
+  nursing:'Weekly subcutaneous injection. Teaching is identical to the GLP-1 agonists: report severe abdominal pain, stay hydrated, expect GI effects to settle.',
+  differs:[
+    {n:'Tirzepatide (Mounjaro, Zepbound)', d:'The only dual agonist. Mounjaro is the diabetes label, Zepbound the weight and sleep apnea label.'},
+    {n:'The exam question', d:'Your guide asks which are GLP-1 and which are GIP/GLP-1, and which produces the greater weight loss. Tirzepatide is the dual agonist and generally produces greater weight loss than semaglutide in trials.'}
+  ]
+},
+thyroidrep:{
+  t:'Thyroid hormone replacement',
+  how:'Replaces the hormone a failing thyroid is not making. Thyroid hormone stimulates energy use by raising metabolic rate, stimulates the heart, and promotes growth of brain, nervous system, and skeletal muscle.',
+  use:'Hypothyroidism. Most commonly from chronic autoimmune thyroiditis (Hashimoto thyroiditis), and also thyroidectomy, iodine deficiency, congenital failure, medications, irradiation, or pituitary failure.',
+  watch:'Adverse effects are rare at appropriate doses. In overdose you see the signs of thyroid hormone excess: tachycardia, palpitations, nervousness, heat intolerance, weight loss, insomnia. With warfarin it increases the INR and the bleeding risk.',
+  nursing:'Single oral dose in the morning on an empty stomach, and it is lifelong. Separate it from iron, calcium supplements, antacids, and some cholesterol-lowering drugs, all of which reduce absorption. Teach the patient not to stop when they start feeling better. If therapy is working, symptoms reverse and the TSH comes down.',
+  differs:[
+    {n:'Levothyroxine (Synthroid, Levothroid, Levoxyl)', d:'Synthetic T4 that the body converts to T3. The standard replacement and the one with the teaching points above.'},
+    {n:'Liothyronine (Cytomel)', d:'This is T3. It acts faster than levothyroxine but has a shorter half-life and duration.'},
+    {n:'Lab logic', d:'In primary hypothyroidism the TSH is high and T3 and T4 are low. Treatment brings the TSH down and the hormones up.'}
+  ]
+},
+antithyroid:{
+  t:'Antithyroid drug',
+  how:'Inhibits thyroid hormone synthesis. PTU additionally blocks the conversion of T4 to T3 in the periphery.',
+  use:'Hyperthyroidism, most often Graves disease. Also thyrotoxic crisis, levothyroxine overdose, and preparation for thyroid surgery or radiation.',
+  watch:'Agranulocytosis, which is rare but the reason this class gets respect. Drug-induced hypothyroidism if the dose overshoots.',
+  nursing:'Teach the patient to report sore throat, fever, or any sign of infection immediately, since that is how agranulocytosis announces itself. If the drug is working, T3 and T4 fall and the TSH rises back toward normal as the negative feedback lifts.',
+  differs:[
+    {n:'Propylthiouracil (PTU)', d:'Blocks synthesis and blocks T4 to T3 conversion. Preferred during pregnancy. Faster onset than methimazole.'},
+    {n:'Methimazole (Tapazole)', d:'Longer half-life so it is dosed less frequently, but it crosses the placenta and its onset is slower. Agranulocytosis risk is similar to PTU.'},
+    {n:'Propranolol', d:'Not an antithyroid drug. The beta blocker reduces the heart rate driven by hyperthyroidism and does not affect T3, T4, or TSH at all. It treats the symptom, not the disease.'}
+  ]
+},
+
+/* ---- GI ---- */
+anticholinergic:{
+  t:'Anticholinergic',
+  how:'Binds and blocks acetylcholine receptors, which blocks transmission of nauseating stimuli to the chemoreceptor trigger zone.',
+  use:'Motion sickness, and nausea around surgery.',
+  watch:'Contraindicated in glaucoma, because blocking acetylcholine increases intraocular pressure. The side effect set is the classic anticholinergic one: blurred vision and dry eyes, drowsiness and dizziness and confusion and hallucinations, dry mouth, rapid heart rate, constipation, urinary retention, and flushed skin that cannot sweat, which leads to overheating. All of it is more pronounced in the elderly.',
+  nursing:'Scopolamine is a 72-hour transdermal patch releasing 1 mg. Remove the old patch before applying a new one, and wash your hands after handling it so you do not transfer it to your eyes. No driving. Sugar-free candy for dry mouth, and watch for constipation and inability to void.',
+  differs:[
+    {n:'Scopolamine (Transderm-Scop, Scopace)', d:'The only one on your list.'},
+    {n:'Memory hook', d:'Cannot see, cannot pee, cannot spit, cannot poop.'}
+  ]
+},
+antihistamine:{
+  t:'Antihistamine (H1 blocker)',
+  how:'Inhibits acetylcholine by binding H1 receptors, which prevents cholinergic stimulation in the vestibular and reticular areas. The vestibular area is the inner ear, responsible for balance, which is why this class owns motion sickness.',
+  use:'Motion sickness first. Also nonproductive cough, allergy symptoms, and sedation.',
+  watch:'Anticholinergic-style effects: drowsiness, dry mouth, constipation, urinary retention. More pronounced in the elderly.',
+  nursing:'Give before travel rather than after the nausea starts. Warn about driving and hazardous tasks. Taken with alcohol these cause severe central nervous system depression. Teach position changes to avoid hypotension.',
+  differs:[
+    {n:'Hydroxyzine (Vistaril)', d:'Can be given PO or IM only, never IV. This is the single-fact question in the class.'},
+    {n:'Dimenhydrinate (Dramamine) and meclizine (Antivert)', d:'The motion sickness and vertigo agents.'},
+    {n:'Diphenhydramine (Benadryl)', d:'Doubles as an allergy drug and a sleep aid, which is why its sedation is heavier.'},
+    {n:'Meclizine', d:'Appears in the lecture slides but not on your final med list, so treat it as bonus.'}
+  ]
+},
+glucocorticoid:{
+  t:'Glucocorticoid',
+  how:'Reduces swelling around tumors that block the gut, brings an anti-inflammatory effect that reduces nausea, and increases endorphin synthesis, which improves mood and appetite.',
+  use:'Emesis associated with chemotherapy.',
+  watch:'With more than short-term use, the usual steroid concerns: hyperglycemia, immunosuppression and masked infection, GI irritation.',
+  nursing:'Given IV for this purpose. Usually paired with a serotonin antagonist before chemo. Monitor blood glucose, especially in a diabetic patient.',
+  differs:[
+    {n:'Dexamethasone (Decadron)', d:'The one usually named for chemotherapy-induced nausea.'},
+    {n:'Methylprednisolone (Solu-Medrol)', d:'Same indication and route in this context.'}
+  ]
+},
+dopamine:{
+  t:'Dopamine antagonist',
+  how:'Blocks dopamine receptors in the chemoreceptor trigger zone so the CTZ cannot pass the nausea signal on to the vomiting center.',
+  use:'Nausea and vomiting. Also used for psychotic disorders and intractable hiccups.',
+  watch:'Moderate sedation, hypotension, and mild anticholinergic symptoms. Extrapyramidal side effects are the reason the IV route is not preferred.',
+  nursing:'PO and IM routes are preferred. IV is common but not preferred, and when it is used it goes in as a slow push. Teach the patient to change positions slowly because of hypotension, and to avoid alcohol.',
+  differs:[
+    {n:'Prochlorperazine (Compazine)', d:'Standard antiemetic use.'},
+    {n:'Promethazine (Phenergan)', d:'Same class, but it is highly irritating to tissue, which is why the slow IV push and route preference matter more here.'},
+    {n:'Versus prokinetics', d:'Both block dopamine in the CTZ. The prokinetics add gastric motility, and they are the ones your slides tie to tardive dyskinesia.'}
+  ]
+},
+prokinetic:{
+  t:'Prokinetic',
+  how:'Blocks dopamine receptors in the CTZ while sensitizing tissues to acetylcholine, which stimulates upper GI motility and enhances emptying of stomach contents. The exact mechanism is not clearly understood.',
+  use:'Nausea and vomiting related to chemotherapy and radiation, anesthesia, and opioids. Also delayed gastric emptying, meaning gastroparesis.',
+  watch:'Tardive dyskinesia with long-term use, and the movements may persist or become permanent even after the drug is stopped. Fatigue, headache, dry mouth, diarrhea. Contraindicated in Parkinson disease because it worsens symptoms, and in GI obstruction, hemorrhage, or perforation.',
+  nursing:'Increase fluids and offer sour sugar-free candy for dry mouth. No driving. Watch for and report lip smacking, puckering, chewing movements, tongue protrusion, grimacing, eye blinking, writhing limb movements, and trunk swaying. Early recognition and a medication review is what limits the damage.',
+  differs:[
+    {n:'Metoclopramide (Reglan)', d:'The drug in this class, and the one your guide points at for tardive dyskinesia.'},
+    {n:'Why the Parkinson contraindication', d:'Parkinson disease is already a dopamine-deficient state. Blocking dopamine further makes the movement symptoms worse.'}
+  ]
+},
+serotonin:{
+  t:'Serotonin antagonist',
+  how:'Blocks serotonin receptors in the GI tract and in the chemoreceptor trigger zone, cutting the signal at both ends.',
+  use:'Post-operative and chemotherapy-related nausea and vomiting.',
+  watch:'QT prolongation, which can lead to dysrhythmias. Headache, dizziness, diarrhea.',
+  nursing:'For chemotherapy, give 30 to 60 minutes before the infusion begins, since prevention works far better than rescue. Check baseline ECG and electrolytes in patients at risk for QT problems.',
+  differs:[
+    {n:'Ondansetron (Zofran)', d:'The one on your list, and the workhorse antiemetic on most units.'},
+    {n:'Why it is first choice for chemo', d:'Chemotherapy triggers serotonin release from the gut directly, so this class targets the actual mechanism rather than a downstream one.'}
+  ]
+},
+cannabinoid:{
+  t:'Cannabinoid',
+  how:'Suppresses activity in the chemoreceptor trigger zone and stimulates appetite.',
+  use:'Nausea, vomiting, and appetite loss resulting from cancer treatment.',
+  watch:'Contraindicated in patients with psychiatric disorders. Mood changes, drowsiness, dizziness, headaches, nightmares, confusion, incoordination, memory lapse, dry mouth, orthostatic hypotension or hypertension, and tachycardia.',
+  nursing:'Screen for psychiatric history before the first dose. Teach slow position changes and no driving. Expect it to be used when other antiemetics have not worked and appetite is also a problem.',
+  differs:[
+    {n:'Dronabinol (Marinol)', d:'The only one on your list.'},
+    {n:'The dual benefit', d:'It is the only antiemetic on the list whose appetite stimulation is a treatment goal rather than a side effect.'}
+  ]
+},
+adsorbent:{
+  t:'Antidiarrheal: adsorbent',
+  how:'Decreases secretion in the GI tract and provides a protective coating that slows gastric motility.',
+  use:'Milder cases of diarrhea.',
+  watch:'Constipation, metallic taste, and bleeding with bismuth subsalicylate. These decrease absorption of digoxin, quinidine, and hypoglycemic drugs. With warfarin they increase bleeding time. They can produce methotrexate toxicity.',
+  nursing:'Never give bismuth subsalicylate to a child or teenager with flu or chickenpox. Use adsorbents carefully in older patients and in anyone with decreased bleeding time, clotting disorders, recent bowel surgery, or confusion. Separate them from other oral drugs.',
+  differs:[
+    {n:'Bismuth subsalicylate (Pepto-Bismol)', d:'The salicylate is the problem. In a child or teen with a viral illness it carries a risk of Reye syndrome, the same reason aspirin is avoided in that group. It also darkens the stool and tongue, which alarms patients if you do not warn them.'},
+    {n:'Cholestyramine (Questran)', d:'A bile acid binder. Its coating and binding action is also why it interferes with so many other drugs.'}
+  ]
+},
+antimotility:{
+  t:'Antidiarrheal: antimotility',
+  how:'Opiate and opiate-related agents decrease bowel motility and reduce pain by relieving spasms. Slowing transit time gives the bowel more time to absorb water and electrolytes.',
+  use:'More severe diarrhea.',
+  watch:'Should not be used for more than 2 days or if fever is present. Can cause dependence. Drowsiness, dizziness, lethargy, nausea and vomiting, constipation, respiratory depression, hypotension, urinary retention, flushing.',
+  nursing:'Track the number of loose stools, since decreasing frequency is how you know it is working. Assess fluid volume status, intake and output, and mucous membranes before, during, and after treatment. Teach the patient to take it exactly as prescribed, watch fluid intake, and notify the prescriber immediately if symptoms persist. No driving.',
+  differs:[
+    {n:'Diphenoxylate with atropine (Lomotil)', d:'The atropine is a subtherapeutic dose added to deter abuse. Take more than directed and you get unpleasant anticholinergic effects before any opioid effect. That atropine also makes it contraindicated in glaucoma.'},
+    {n:'Loperamide (Imodium)', d:'The over-the-counter option, without the atropine.'},
+    {n:'Why the fever rule', d:'Slowing transit in an infectious process keeps the organism in the gut longer, so a fever changes the calculation.'}
+  ]
+},
+probiotic:{
+  t:'Probiotic',
+  how:'Also called intestinal flora modifiers or bacterial replacement drugs. They restore the normal bacterial population of the gut.',
+  use:'Antibiotic-induced diarrhea.',
+  watch:'Generally well tolerated. Caution in severely immunocompromised patients.',
+  nursing:'Separate the dose from the antibiotic so the antibiotic does not simply kill it. Follow product storage instructions, since many require refrigeration.',
+  differs:[
+    {n:'L. acidophilus', d:'The one on your list.'},
+    {n:'Different logic from the others', d:'Every other antidiarrheal slows the gut down. This one replaces what the antibiotic destroyed.'}
+  ]
+},
+osmotic:{
+  t:'Osmotic laxative',
+  how:'Hyperosmolar agents that pull water into the colon and increase the water in the feces. That increases bulk, the bowel distends, and peristalsis and the urge to evacuate follow.',
+  use:'Constipation, and bowel preparation before procedures.',
+  watch:'Fluid and electrolyte imbalances, hypotension, weakness, abdominal bloating, cramping, diarrhea, increased thirst.',
+  nursing:'Assess fluid and electrolyte status before starting. Teach the patient to report severe abdominal pain, muscle weakness, cramps, or dizziness, all of which point at fluid or electrolyte loss.',
+  differs:[
+    {n:'Lactulose (Chronulac)', d:'Also used to decrease serum ammonia levels in hepatic encephalopathy. That second use is the crossover item most likely to show up.'},
+    {n:'Polyethylene glycol (GoLYTELY)', d:'The high-volume bowel prep.'}
+  ]
+},
+stimulant:{
+  t:'Stimulant laxative',
+  how:'Increases peristalsis by irritating sensory nerve endings in the intestinal mucosa.',
+  use:'Constipation.',
+  watch:'Abdominal cramps, weakness, diarrhea, nutrient malabsorption, electrolyte imbalances. Senna turns urine reddish brown.',
+  nursing:'Works in 6 to 12 hours orally and 15 to 60 minutes rectally, so time the dose around the patient. Tablets are swallowed whole with 6 to 8 oz of water, never crushed or chewed, especially if enteric coated. Long-term use leads to decreased bowel tone and dependency.',
+  differs:[
+    {n:'Bisacodyl (Dulcolax)', d:'Give with water, not milk, antacids, or juice. Those raise gastric pH and dissolve the enteric coating early, which causes cramping and wastes the dose.'},
+    {n:'Senna (Senokot)', d:'Discolors urine reddish brown. Warn the patient so they are not frightened by it.'}
+  ]
+},
+bulk:{
+  t:'Bulk-forming laxative',
+  how:'Absorbs water into the intestines, increasing bulk and peristalsis. Closest thing to a natural high-fiber stool, which is why it is the safest class for long-term use.',
+  use:'Constipation. Results in 8 to 12 hours.',
+  watch:'Impaction, esophageal blockage, fluid disturbances, and electrolyte imbalances, all of which come from not taking enough water with it. Abdominal cramps.',
+  nursing:'Mix in a glass of water or juice, stir and drink immediately because it gels fast, then follow with a full glass of water. At least 8 oz per the manufacturer. When a patient increases dietary fiber, fluid must increase too, or you produce the exact problem you were treating.',
+  differs:[
+    {n:'Psyllium (Metamucil) and methylcellulose (Citrucel)', d:'Behave the same way and carry the same fluid requirement.'}
+  ]
+},
+emollient:{
+  t:'Emollient (stool softener)',
+  how:'Facilitates the mixture of stool fat and water, emulsifying and lubricating the feces so they pass more easily.',
+  use:'Prevent constipation and decrease straining during defecation. Specifically used to reduce straining after surgery or myocardial infarction.',
+  watch:'Abdominal cramping, diarrhea, electrolyte disorders, and decreased absorption of vitamins.',
+  nursing:'This is prevention, not rescue. It will not relieve an impaction. Give with plenty of fluid.',
+  differs:[
+    {n:'Docusate sodium (Colace)', d:'The softener alone.'},
+    {n:'Docusate with senna (PeriColace)', d:'Adds a stimulant to the softener.'},
+    {n:'Why after an MI', d:'Straining triggers the Valsalva maneuver, which stresses a recovering heart.'}
+  ]
+},
+antacid:{
+  t:'Antacid',
+  how:'They do not prevent the overproduction of acid. They neutralize acid that has already been secreted, and they stimulate secretion of mucus, the protective barrier, and bicarbonate, which buffers the acid. Raising gastric pH by about 1 point neutralizes 90 percent of gastric acid.',
+  use:'Acute relief of symptoms associated with peptic ulcer, gastritis, and heartburn.',
+  watch:'Overuse causes metabolic alkalosis. Contraindicated in known allergy, severe renal failure or electrolyte disturbance because the antacid electrolytes accumulate, and GI obstruction because antacids may stimulate motility when an obstruction needs surgery.',
+  nursing:'Most other medications should be given 1 to 2 hours after an antacid. The reason is chelation, the chemical binding and inactivation of another drug into insoluble complexes, which reduces absorption. Antacids also change stomach pH, which affects absorption of drugs that need acid, and urinary pH, which affects excretion. Chew chewable tablets thoroughly and shake liquids well. Long-term self-medication can mask malignancy or a bleeding ulcer.',
+  differs:[
+    {n:'Aluminum salts (Basaljel, Maalox)', d:'Constipating. Often recommended for patients with renal disease because aluminum is more easily excreted.'},
+    {n:'Magnesium (Milk of Magnesia)', d:'Causes diarrhea, which is exactly why it is combined with aluminum and calcium: the bowel effects cancel out and magnesium adds neutralizing capacity. Dangerous in renal failure, since the failing kidney cannot excrete it. Note that at higher doses this same drug is a saline laxative.'},
+    {n:'Calcium carbonate (Tums)', d:'Constipation, kidney stones, and gas, so it is often combined with simethicone. Long duration of action can cause rebound hyperacidity. Also marketed as a dietary calcium source. Not recommended in renal disease.'},
+    {n:'Sodium bicarbonate (Alka-Seltzer)', d:'Highly soluble with quick onset and short duration. The sodium content is the problem in heart failure, hypertension, or renal insufficiency.'}
+  ]
+},
+antiflatulent:{
+  t:'Antiflatulent',
+  how:'Alters gas bubble surface tension, which makes the bubbles coalesce and disperse so the gas can leave the GI tract as flatulence or belching.',
+  use:'The painful symptoms associated with gas.',
+  watch:'Minimal adverse effects.',
+  nursing:'Frequently added to antacid combination products, especially calcium carbonate, since calcium carbonate itself produces gas.',
+  differs:[
+    {n:'Simethicone', d:'The only one on your list. It does not absorb or neutralize anything, it just changes the physics of the bubbles.'}
+  ]
+},
+h2:{
+  t:'H2 receptor antagonist',
+  how:'Competitively blocks the H2 receptor on acid-producing parietal cells. That reduces hydrogen ion secretion, raises the pH of the stomach, and relieves hyperacidity symptoms. It blocks one stimulus pathway, not the pump itself.',
+  use:'GERD, peptic ulcer disease, erosive esophagitis, adjunct therapy to control upper GI bleeding, and stress ulcer prophylaxis in ICU patients.',
+  watch:'Very few adverse effects overall. In elderly patients, central nervous system effects including confusion and disorientation. Thrombocytopenia has been reported with famotidine, along with anaphylaxis.',
+  nursing:'For best results take the H2 blocker 1 to 2 hours before an antacid. Smoking decreases their effectiveness. Assess for allergies and impaired renal function, and use caution in patients who are confused, disoriented, or older.',
+  differs:[
+    {n:'Cimetidine (Tagamet)', d:'Largely replaced by famotidine because of its potential to cause drug interactions. It is still used in patients who are not taking multiple medications.'},
+    {n:'Famotidine (Pepcid)', d:'The safer option, and the default choice when a patient is on several drugs.'},
+    {n:'Versus PPIs', d:'H2 blockers are competitive and reversible, and they only cover the histamine pathway. Gastrin and acetylcholine can still drive acid production.'}
+  ]
+},
+ppi:{
+  t:'Proton pump inhibitor',
+  how:'Parietal cells release hydrogen ions during acid production through what is called the proton pump. These drugs irreversibly bind the H+/K+ ATPase enzyme, preventing hydrogen ions from moving from the parietal cell into the stomach.',
+  use:'GERD, erosive esophagitis, short-term treatment of active duodenal and benign gastric ulcers, NSAID-induced ulcers, stress ulcer prophylaxis, and H. pylori-induced ulcers when given with an antibiotic for 10 to 14 days.',
+  watch:'Generally well tolerated. Possible predisposition to GI tract infections, particularly Clostridium difficile. Osteoporosis and fracture risk in long-term users. Pneumonia. Depletion of magnesium.',
+  nursing:'Food decreases absorption, so take on an empty stomach. They increase serum levels of diazepam and phenytoin, can increase digoxin levels, raise INR and bleeding risk with warfarin, and can reduce the effectiveness of clopidogrel. Sucralfate may delay their absorption, so separate the two. Assess for liver disease.',
+  differs:[
+    {n:'The suffix', d:'All end in -prazole. Omeprazole (Prilosec) and pantoprazole (Protonix) are on your list; lansoprazole, rabeprazole, esomeprazole, and dexlansoprazole are the others.'},
+    {n:'How the mechanism differs from everything else', d:'Antacids neutralize acid after it is secreted. H2 blockers reversibly block one of several stimulus pathways at the receptor. PPIs block the final common step, the pump itself, irreversibly. No matter which stimulus arrives, the hydrogen ion cannot leave the cell. That is why acid suppression is more complete and longer lasting.'}
+  ]
+},
+pepsin:{
+  t:'Pepsin inhibitor (mucosal protectant)',
+  how:'Combines with proteins to form a thick paste that covers the ulcer, protecting it from acid and pepsin. Think of it as a liquid bandage over the crater.',
+  use:'Peptic ulcer disease. Peptic ulcers involve digestion of the GI mucosa by the enzyme pepsin, and predisposing factors are H. pylori infection, long-term NSAIDs, long-term steroids, and NG tubes.',
+  watch:'Constipation.',
+  nursing:'Give 30 minutes before meals and at bedtime, so the coating is in place before food and acid arrive. It delays the absorption of PPIs and other drugs, so space the doses.',
+  differs:[
+    {n:'Sucralfate (Carafate)', d:'The only drug in the class.'},
+    {n:'Different from every other acid drug', d:'It does nothing to the acid. It protects the tissue instead, which is why it is a mucosal protectant rather than an acid controller.'}
+  ]
+},
+
+/* ---- individual insulins, for the timing round ---- */
+lispro:{
+  t:'Lispro (Humalog)',
+  how:'Rapid-acting human insulin analog. Activates glucose transporters so glucose moves into the cell.',
+  use:'Mealtime coverage and correction doses.',
+  watch:'Onset 15-30 min, peak 0.5-2.5 hr, duration 3-6 hr. Hypoglycemia risk is highest at the peak, which is within the first couple of hours after the meal.',
+  nursing:'The most flexible of the rapid analogs: it can be given right before or even just after a meal. Food still has to be available.',
+  differs:[{n:'Against the other rapids', d:'Its peak window is the widest, 0.5 to 2.5 hr, and its duration is the longest at 3 to 6 hr.'}]
+},
+aspart:{
+  t:'Aspart (NovoLog)',
+  how:'Rapid-acting human insulin analog.',
+  use:'Mealtime coverage and correction doses.',
+  watch:'Onset 10-20 min, peak 1-5 hr, duration 3-5 hr.',
+  nursing:'Give 5 to 10 minutes before the meal. Confirm the tray is there first.',
+  differs:[{n:'Watch this one', d:'Its peak of 1-5 hr is identical to regular insulin, which is the one overlap in the whole timing table.'}]
+},
+glulisine:{
+  t:'Glulisine (Apidra)',
+  how:'Rapid-acting human insulin analog.',
+  use:'Mealtime coverage and correction doses.',
+  watch:'Onset 10-15 min, peak 1-1.5 hr, duration 3-5 hr.',
+  nursing:'Give 15 minutes before eating.',
+  differs:[{n:'Fastest on, tightest peak', d:'Onset of 10-15 min and the narrowest peak window of the three rapids at 1-1.5 hr.'}]
+},
+regular:{
+  t:'Regular insulin (Humulin R, Novolin R)',
+  how:'Insulin that resembles natural human insulin, not a modified analog.',
+  use:'Mealtime coverage, and the insulin used IV in DKA and hyperkalemia.',
+  watch:'Onset 30 min to 1 hr, peak 1-5 hr, duration 6-10 hr. The longer duration widens the hypoglycemia window compared with a rapid analog.',
+  nursing:'Must be given 30 to 60 minutes before a meal. It is the only insulin that can be safely given IV, and it mixes with NPH.',
+  differs:[{n:'The IV rule', d:'If a scenario involves an insulin drip or DKA, this is the insulin. No other insulin on the list goes IV.'}]
+},
+nph:{
+  t:'NPH insulin (Humulin N, Novolin N)',
+  how:'Regular insulin linked to protamine, a large protein that slows absorption and stretches out the action.',
+  use:'Background coverage, usually twice daily.',
+  watch:'Onset 1-2 hr, peak 6-14 hr, duration 16-24 hr. A morning dose peaks in the late afternoon or overnight, which is where the hypoglycemia shows up. Allergic reaction to the foreign protamine protein.',
+  nursing:'The only cloudy insulin. Roll gently, never shake. The only one that can be mixed with short-acting insulins, and you draw clear before cloudy. SC only.',
+  differs:[{n:'Longest peak window', d:'6 to 14 hours is by far the widest peak in the table, which is exactly why the timing matters for patient teaching.'}]
+},
+glargine:{
+  t:'Insulin glargine (Lantus)',
+  how:'Modified human insulin made by recombinant DNA technology that releases at a flat, steady rate.',
+  use:'Basal coverage once daily. The long-acting component of a tight-control four-shot regimen.',
+  watch:'Onset 70 min, duration 24 hr, and no distinct peak. Lower hypoglycemia risk than peaking insulins, but not zero.',
+  nursing:'SC only. Never mix it with another insulin and never give it IV. Same time every day.',
+  differs:[{n:'The missing peak', d:'It is the only insulin on the list without a peak, and that is the fact most likely to be tested.'}]
+}
+
+};
+
 const ROUNDS = {endocrine:ENDOCRINE, gi:GI, insulin:INSULIN};
 const ORDER = ['endocrine','gi','insulin'];
 
@@ -678,16 +1198,20 @@ function startRound(key, only){
 
   S = {key, R, kind: key==='insulin' ? 'insulin' : 'class',
        placed:0, total:0, misses:0, selected:null, t0:Date.now(), done:false,
-       errors:new Map()};
+       review:reviewMode, canInfo:false, errors:new Map()};
 
   $('#round-title').textContent = R.title;
-  $('#round-sub').textContent = R.sub;
+  $('#round-sub').textContent = reviewMode
+    ? 'Everything is sorted for you. Tap any box for the mechanism, indication, adverse effects, nursing points, and what sets each drug apart.'
+    : R.sub;
   $('#footnote').innerHTML = R.note ? 'Note. '+R.note : '';
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', String(t.dataset.round===key)));
   $('#btn-counts').style.display = S.kind==='class' ? '' : 'none';
 
   if(S.kind==='class') buildClassRound(R, only); else buildInsulinRound(R, only);
   applyNames();
+
+  if(reviewMode){ fillEverything(); S.done = true; enableInfo(); }
 
   $('#s-total').textContent = S.total;
   updateStats();
@@ -718,7 +1242,8 @@ function buildClassRound(R, only){
     el.dataset.need = items.length;
     el.innerHTML =
       '<div class="binhead"><span class="binname">'+bin.name+'</span>'+
-      '<span class="bincount" data-count>'+(showCounts? '0/'+items.length : '')+'</span></div>'+
+      '<span class="bincount" data-count>'+(showCounts? '0/'+items.length : '')+'</span>'+
+      '<span class="infodot" aria-hidden="true">i</span></div>'+
       '<div class="bindrop"><div class="emptyhint">Drop here</div></div>';
     board.appendChild(el);
     items.forEach(it=> tiles.push({...it, bin:bin.id, binName:bin.name}));
@@ -779,7 +1304,7 @@ function buildInsulinRound(R, only){
     c.className='icard';
     c.dataset.ins = ins.id;
     c.innerHTML =
-      '<h3>'+ins.name+'</h3>'+
+      '<div class="ihead"><h3>'+ins.name+'</h3><span class="infodot" aria-hidden="true">i</span></div>'+
       '<div class="cls">'+ins.brand+' &middot; '+ins.cls+'</div>'+
       '<div class="slots">'+
         slotHTML(ins.id,'onset','Onset')+
@@ -858,7 +1383,7 @@ function place(tile, target){
   S.placed++;
   updateStats();
   refreshDock();
-  if(S.placed===S.total) finish();
+  if(S.placed===S.total && !S.review) finish();
 }
 
 function missed(tile, target){
@@ -867,7 +1392,7 @@ function missed(tile, target){
   const rec = S.errors.get(k) || {n:0, label:k, right: S.kind==='class' ? tile.dataset.binName : ownerOf(tile.dataset.val), wrong:new Set()};
   rec.n++;
   rec.wrong.add(S.kind==='class' ? target.querySelector('.binname').textContent
-                                 : target.closest('.icard').querySelector('h3').textContent+' '+target.dataset.kind);
+                                 : target.closest('.icard').querySelector('.ihead h3').textContent+' '+target.dataset.kind);
   S.errors.set(k, rec);
   target.classList.add('rejecting');
   setTimeout(()=>target.classList.remove('rejecting'),320);
@@ -1121,9 +1646,10 @@ function finish(){
   const acc = Math.round(firstTry/S.total*100);
 
   $('#sheet-title').textContent = S.R.title + ' complete';
-  $('#sheet-sub').textContent = firstTry===S.total
-    ? 'Clean run. Every tile landed on the first try.'
-    : firstTry+' of '+S.total+' landed on the first try.';
+  $('#sheet-sub').textContent = (firstTry===S.total
+    ? 'Clean run. Every tile landed on the first try. '
+    : firstTry+' of '+S.total+' landed on the first try. ')
+    + 'Every box is now tappable for the full class breakdown.';
   $('#r-acc').textContent = acc+'%';
   $('#r-miss').textContent = S.misses;
   $('#r-time').textContent = fmt(ms);
@@ -1147,6 +1673,7 @@ function finish(){
   $('#r-keybox').hidden = true;
   $('#r-keybox').innerHTML = '';
   $('#r-next').style.display = ORDER.indexOf(S.key) < ORDER.length-1 ? '' : 'none';
+  enableInfo();
   $('#overlay').hidden = false;
   $('#r-again').focus();
 }
@@ -1166,6 +1693,91 @@ function buildKey(){
   box.innerHTML = html+'</dl>';
   box.hidden=false;
 }
+
+/* ============================================================
+   REVIEW MODE AND CLASS CARDS
+   ============================================================ */
+
+let reviewMode = false;
+
+/* drop every tile into its correct home, so the board reads as a study sheet */
+function fillEverything(){
+  const board = $('#board'), pool = $('#pool');
+  if(S.kind==='class'){
+    [...pool.querySelectorAll('.tile')].forEach(t=>{
+      const bin = board.querySelector('.bin[data-bin="'+t.dataset.bin+'"]');
+      if(bin) place(t, bin);
+    });
+  } else {
+    board.querySelectorAll('.slot').forEach(sl=>{
+      const ins = INSULIN.items.find(i=>i.id===sl.dataset.ins);
+      if(!ins) return;
+      const want = ins[sl.dataset.kind];
+      const t = [...pool.querySelectorAll('.vtile')].find(v=>v.dataset.val===want);
+      if(t) place(t, sl);
+    });
+  }
+  refreshDock();
+}
+
+function enableInfo(){
+  S.canInfo = true;
+  document.querySelectorAll('#board .bin, #board .icard').forEach(el=>{
+    el.classList.add('can-info');
+    el.tabIndex = 0;
+    el.setAttribute('role','button');
+    const key = el.dataset.bin || el.dataset.ins;
+    const card = INFO[key];
+    if(card) el.setAttribute('aria-label', card.t+', open details');
+  });
+}
+
+function openInfo(key){
+  const c = INFO[key];
+  if(!c) return;
+  $('#info-title').textContent = c.t;
+  let html = '';
+  const sec = (h,b)=> b ? '<div class="isec"><h3>'+h+'</h3><p>'+b+'</p></div>' : '';
+  html += sec('How it works', c.how);
+  html += sec('What it treats', c.use);
+  html += sec('Watch for', c.watch);
+  html += sec('Nursing and teaching', c.nursing);
+  if(c.differs && c.differs.length){
+    html += '<div class="isec"><h3>What sets the drugs apart</h3><ul class="idiff">'+
+      c.differs.map(d=>'<li><b>'+d.n+'</b>'+d.d+'</li>').join('')+'</ul></div>';
+  }
+  $('#info-body').innerHTML = html;
+  $('#infolay').hidden = false;
+  $('#infolay .sheet').scrollTop = 0;
+  $('#info-close').focus();
+}
+function closeInfo(){ $('#infolay').hidden = true; }
+
+document.addEventListener('click', e=>{
+  if(!S || !S.canInfo || S.selected) return;
+  if(!$('#infolay').hidden || !$('#overlay').hidden) return;
+  const host = e.target.closest('#board .bin.can-info, #board .icard.can-info');
+  if(!host) return;
+  openInfo(host.dataset.bin || host.dataset.ins);
+});
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter' || !S || !S.canInfo) return;
+  const host = document.activeElement && document.activeElement.closest
+    ? document.activeElement.closest('#board .bin.can-info, #board .icard.can-info') : null;
+  if(host){ e.preventDefault(); openInfo(host.dataset.bin || host.dataset.ins); }
+});
+$('#info-close').addEventListener('click', closeInfo);
+$('#infolay').addEventListener('click', e=>{ if(e.target.id==='infolay') closeInfo(); });
+
+$('#btn-review').addEventListener('click', e=>{
+  reviewMode = !reviewMode;
+  e.currentTarget.setAttribute('aria-pressed', String(reviewMode));
+  e.currentTarget.textContent = reviewMode ? 'Back to drill' : 'Review';
+  document.body.classList.toggle('review', reviewMode);
+  $('#overlay').hidden = true;
+  closeInfo();
+  startRound(S.key);
+});
 
 /* ============================================================
    CONTROLS
@@ -1207,9 +1819,11 @@ $('#r-drill').addEventListener('click',()=>{
   startRound(S.key, only);
 });
 $('#r-key').addEventListener('click',buildKey);
+$('#r-close').addEventListener('click',()=>{ $('#overlay').hidden=true; });
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
-    if(!$('#overlay').hidden) $('#overlay').hidden=true;
+    if(!$('#infolay').hidden) closeInfo();
+    else if(!$('#overlay').hidden) $('#overlay').hidden=true;
     else if(S && S.selected){ S.selected.classList.remove('selected'); S.selected=null; }
   }
 });
