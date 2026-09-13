@@ -82,7 +82,7 @@ header{
 /* ---------- board ---------- */
 main{
   max-width:1340px;margin:0 auto;padding:18px;
-  display:grid;grid-template-columns:296px minmax(0,1fr);gap:18px;align-items:start;
+  display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;align-items:start;
 }
 .boardcol{min-width:0}
 .lede{
@@ -248,9 +248,15 @@ main{
 .dockhead .n{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .pool{
   flex:1 1 auto;min-height:70px;
-  overflow-y:auto;overscroll-behavior:contain;
+  overflow-y:auto;overscroll-behavior-y:auto;
   padding:10px 12px 12px;
   display:flex;flex-direction:column;gap:6px;
+  scrollbar-width:thin;
+}
+/* one column when both names show, two when only one does */
+.pool[data-cols="2"]{
+  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+  align-content:start;
 }
 .pool .tile{width:100%;padding:6px 9px}
 .pool .vtile{width:100%}
@@ -259,7 +265,12 @@ main{
   padding:8px 12px;border-bottom:1px dashed var(--line);
 }
 .namebar[hidden]{display:none}
+.dock.controls-hidden .namebar{display:none}
+.namebar.no-names .seg{display:none}
 .nb-lbl{font-size:12.5px;color:var(--muted);flex:0 0 auto}
+.ghostbtn.tiny{padding:4px 9px;font-size:12px;border-radius:6px}
+.chev{display:inline-block;transition:transform .16s ease;margin-left:5px;font-size:10px;line-height:1}
+[aria-expanded="false"] .chev{transform:rotate(-90deg)}
 .seg{
   display:flex;flex:1 1 auto;gap:2px;
   background:var(--panel-2);border:1px solid var(--line-soft);
@@ -372,7 +383,9 @@ main{
     width:100%;max-width:1180px;margin:0 auto;
     flex-direction:row;flex-wrap:wrap;align-content:flex-start;
     gap:7px;max-height:min(36vh,230px);padding:0 16px 12px;
+    overscroll-behavior-y:contain;
   }
+  .pool[data-cols="2"]{display:flex}
   .pool .tile{width:auto;flex:1 1 calc(50% - 4px);min-width:0;max-width:none}
   .pool .vtile{width:auto;flex:1 1 calc(50% - 4px)}
   .namebar{max-width:1180px;margin:0 auto;width:100%;padding:6px 16px 8px;border-bottom:0}
@@ -423,15 +436,15 @@ main{
       <span class="t" id="dock-title">Drag a drug into its class</span>
       <span class="n" id="dock-count"></span>
       <div class="spacer"></div>
-      <button class="ghostbtn" id="btn-shuffle">Shuffle</button>
+      <button class="ghostbtn tiny" id="btn-controls" aria-expanded="true" aria-controls="namebar">Options<span class="chev">&#9660;</span></button>
     </div>
     <div class="namebar" id="namebar">
-      <span class="nb-lbl">Show</span>
       <div class="seg" role="group" aria-label="Name shown in the word bank">
         <button type="button" data-names="generic" aria-pressed="false">Generic</button>
         <button type="button" data-names="brand" aria-pressed="false">Brand</button>
         <button type="button" data-names="both" aria-pressed="true">Both</button>
       </div>
+      <button class="ghostbtn tiny" id="btn-shuffle">Shuffle</button>
     </div>
     <div class="pool" id="pool"></div>
   </aside>
@@ -735,14 +748,19 @@ function makeTile(t){
 /* generic / brand / both, applies to the word bank only */
 let nameMode = 'both';
 function applyNames(){
-  document.querySelectorAll('#pool .tile').forEach(t=>{
+  const pool = $('#pool');
+  pool.querySelectorAll('.tile').forEach(t=>{
     if(nameMode==='both') t.removeAttribute('data-names');
     else t.dataset.names = nameMode;
   });
   document.querySelectorAll('#namebar .seg button').forEach(b=>{
     b.setAttribute('aria-pressed', String(b.dataset.names===nameMode));
   });
-  $('#namebar').hidden = !S || S.kind!=='class';
+  const classRound = S && S.kind==='class';
+  $('#namebar').classList.toggle('no-names', !classRound);
+  // one long name per row, or two short ones side by side
+  if(classRound && nameMode!=='both') pool.dataset.cols = '2';
+  else pool.removeAttribute('data-cols');
 }
 
 function buildInsulinRound(R, only){
@@ -980,6 +998,7 @@ function onMove(e){
 /* scroll the word bank first, hand the leftover to the page */
 function scrollBank(d){
   const host = $('#pool');
+  if(host.scrollHeight <= host.clientHeight + 2){ window.scrollBy(0, d); return; }
   const before = host.scrollTop;
   host.scrollTop += d;
   const applied = host.scrollTop - before;
@@ -1046,7 +1065,8 @@ function startAutoScroll(){
     const pr = poolEl.getBoundingClientRect();
 
     // inside the word bank: scroll the bank itself
-    if(x>=pr.left && x<=pr.right && y>=pr.top-6 && y<=pr.bottom+6){
+    const bankScrolls = poolEl.scrollHeight > poolEl.clientHeight + 2;
+    if(bankScrolls && x>=pr.left && x<=pr.right && y>=pr.top-6 && y<=pr.bottom+6){
       if(y < pr.top+44) poolEl.scrollTop -= 11;
       else if(y > pr.bottom-44) poolEl.scrollTop += 11;
       scrollRAF = requestAnimationFrame(step);
@@ -1082,6 +1102,11 @@ document.addEventListener('click', e=>{
 
 document.querySelectorAll('#namebar .seg button').forEach(b=>{
   b.addEventListener('click',()=>{ nameMode = b.dataset.names; applyNames(); });
+});
+
+$('#btn-controls').addEventListener('click',e=>{
+  const hidden = $('#dock').classList.toggle('controls-hidden');
+  e.currentTarget.setAttribute('aria-expanded', String(!hidden));
 });
 
 /* ============================================================
