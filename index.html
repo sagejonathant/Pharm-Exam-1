@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drug Class Drill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#E7EBE8;
+  --panel:#FFFFFF;
+  --panel-2:#F3F6F4;
+  --ink:#16262B;
+  --muted:#6A797E;
+  --line:#C9D3CF;
+  --line-soft:#DDE4E1;
+  --accent:#1F4380;
+  --accent-soft:#E7ECF5;
+  --ok:#11624A;
+  --ok-bg:#E1EFE9;
+  --ok-line:#9CC9B8;
+  --bad:#AE2A1F;
+  --bad-bg:#F9E4E1;
+  --dock-h:210px;
+  --head-h:62px;
+  --radius:10px;
+  font-synthesis-weight:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:'Instrument Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:15px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+button{font:inherit;color:inherit}
+
+/* ---------- header ---------- */
+header{
+  position:sticky;top:0;z-index:40;
+  background:var(--ground);
+  border-bottom:1px solid var(--line);
+}
+.hrow{
+  max-width:1180px;margin:0 auto;
+  padding:10px 18px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.brand{
+  font-family:'Instrument Serif',Georgia,serif;
+  font-size:23px;letter-spacing:-.01em;line-height:1;
+  margin-right:2px;white-space:nowrap;
+}
+.brand em{font-style:italic;color:var(--accent)}
+.tabs{display:flex;gap:4px;background:var(--panel-2);padding:3px;border-radius:8px;border:1px solid var(--line-soft)}
+.tab{
+  border:0;background:transparent;border-radius:6px;
+  padding:6px 12px;font-size:13.5px;font-weight:500;color:var(--muted);
+  cursor:pointer;white-space:nowrap;
+}
+.tab[aria-selected="true"]{background:var(--panel);color:var(--accent);box-shadow:0 1px 2px rgba(20,40,45,.10);font-weight:600}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.spacer{flex:1 1 auto}
+.stats{display:flex;align-items:center;gap:16px;font-size:13px;color:var(--muted)}
+.stat b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.ghostbtn{
+  border:1px solid var(--line);background:var(--panel);
+  border-radius:7px;padding:6px 11px;font-size:13px;font-weight:500;
+  cursor:pointer;
+}
+.ghostbtn:hover{border-color:var(--accent);color:var(--accent)}
+.ghostbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.progwrap{height:3px;background:var(--line-soft)}
+.progbar{height:100%;width:0;background:var(--accent);transition:width .35s cubic-bezier(.2,.7,.3,1)}
+
+/* ---------- board ---------- */
+main{
+  max-width:1340px;margin:0 auto;padding:18px;
+  display:grid;grid-template-columns:296px minmax(0,1fr);gap:18px;align-items:start;
+}
+.boardcol{min-width:0}
+.lede{
+  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  margin:2px 0 16px;
+}
+.lede h1{
+  font-family:'Instrument Serif',Georgia,serif;
+  font-weight:400;font-size:30px;line-height:1.05;margin:0;letter-spacing:-.015em;
+}
+.lede p{margin:0;color:var(--muted);font-size:14px;max-width:56ch}
+
+.board{
+  display:grid;gap:12px;
+  grid-template-columns:repeat(auto-fill,minmax(255px,1fr));
+  align-items:start;
+}
+.bin{
+  background:var(--panel);
+  border:1px solid var(--line-soft);
+  border-radius:var(--radius);
+  padding:10px 11px 11px;
+  min-height:96px;
+  transition:border-color .12s,background .12s,box-shadow .12s;
+}
+.bin:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bin.over{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.bin.rejecting{animation:binbad .3s ease}
+@keyframes binbad{0%,100%{border-color:var(--line-soft)}30%,70%{border-color:var(--bad);background:var(--bad-bg)}}
+.bin.solved{background:var(--ok-bg);border-color:var(--ok-line)}
+.binhead{
+  display:flex;align-items:baseline;gap:8px;
+  padding-bottom:8px;margin-bottom:8px;
+  border-bottom:1px dashed var(--line);
+}
+.binname{font-weight:600;font-size:14px;letter-spacing:-.005em;line-height:1.25}
+.bincount{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bindrop{
+  display:flex;flex-direction:column;gap:6px;min-height:44px;
+  justify-content:center;
+}
+.emptyhint{
+  font-size:12.5px;color:#9AA8AC;text-align:center;padding:8px 4px;
+  border:1px dashed var(--line);border-radius:7px;
+}
+
+/* ---------- tiles ---------- */
+.tile{
+  display:block;width:100%;text-align:left;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-left:3px solid var(--accent);
+  border-radius:8px;
+  padding:7px 10px;
+  cursor:grab;
+  touch-action:none;
+  user-select:none;-webkit-user-select:none;
+  transition:box-shadow .12s,border-color .12s,transform .12s;
+}
+.tile:hover{box-shadow:0 2px 6px rgba(20,40,45,.11)}
+.tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tile .g{display:block;font-weight:600;font-size:14px;line-height:1.25;letter-spacing:-.005em}
+.tile .b{display:block;font-size:12px;color:var(--muted);line-height:1.3;margin-top:1px}
+.tile.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft),0 2px 8px rgba(20,40,45,.14)}
+.tile.lifted{opacity:.28;pointer-events:none}
+.tile.placed{
+  cursor:default;background:var(--panel);
+  border-left-color:var(--ok);border-color:var(--ok-line);
+}
+.tile.placed .g{color:var(--ok)}
+.tile.pop{animation:pop .34s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.9)}55%{transform:scale(1.035)}100%{transform:scale(1)}}
+.fact{
+  font-size:12px;color:var(--muted);line-height:1.35;
+  margin:4px 0 0 4px;padding-left:8px;border-left:2px solid var(--ok-line);
+}
+
+/* dragging ghost */
+.ghost{
+  position:fixed;z-index:999;pointer-events:none;
+  box-shadow:0 10px 24px rgba(20,40,45,.26);
+  transform:rotate(-1.1deg) scale(1.02);
+  cursor:grabbing;
+}
+.ghost.wrong{
+  border-color:var(--bad)!important;border-left-color:var(--bad)!important;
+  background:var(--bad-bg)!important;
+  animation:shake .3s ease;
+}
+.ghost.wrong .g{color:var(--bad)}
+.ghost.wrong .b{color:var(--bad);opacity:.75}
+@keyframes shake{
+  0%,100%{transform:translateX(0) rotate(-1.1deg)}
+  15%{transform:translateX(-9px) rotate(-3deg)}
+  35%{transform:translateX(8px) rotate(2.5deg)}
+  55%{transform:translateX(-6px) rotate(-2deg)}
+  75%{transform:translateX(4px) rotate(1deg)}
+}
+.ghost.returning{transition:left .26s cubic-bezier(.4,0,.2,1),top .26s cubic-bezier(.4,0,.2,1),transform .26s}
+
+/* ---------- insulin round ---------- */
+.insulin-grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.icard{
+  background:var(--panel);border:1px solid var(--line-soft);
+  border-radius:var(--radius);padding:12px 13px 13px;
+}
+.icard.solved{background:var(--ok-bg);border-color:var(--ok-line)}
+.icard h3{margin:0;font-size:15px;font-weight:600;letter-spacing:-.005em}
+.icard .cls{font-size:12px;color:var(--muted);margin:1px 0 10px}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slot{
+  border:1px dashed var(--line);border-radius:8px;padding:7px 9px;
+  min-height:58px;display:flex;flex-direction:column;justify-content:center;
+  background:var(--panel-2);
+  transition:border-color .12s,background .12s;
+}
+.slot:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.slot .lbl{font-size:11.5px;color:var(--muted);font-weight:500;letter-spacing:.01em}
+.slot .val{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:#A6B2B6;margin-top:2px}
+.slot.filled{border-style:solid;border-color:var(--ok-line);background:var(--panel)}
+.slot.filled .val{color:var(--ok)}
+.slot.over{border-color:var(--accent);background:var(--accent-soft)}
+.slot.rejecting{animation:binbad .3s ease}
+.dur{margin-top:9px;font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:baseline}
+.dur b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.vtile{
+  display:inline-block;text-align:center;
+  background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:8px;padding:9px 14px;cursor:grab;touch-action:none;
+  font-weight:600;font-size:14.5px;font-variant-numeric:tabular-nums;
+  user-select:none;-webkit-user-select:none;
+  transition:box-shadow .12s,border-color .12s;
+}
+.vtile:hover{box-shadow:0 2px 6px rgba(20,40,45,.11)}
+.vtile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vtile.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.vtile.lifted{opacity:.28;pointer-events:none}
+
+/* ---------- dock ---------- */
+.dock{
+  position:sticky;top:calc(var(--head-h) + 14px);z-index:30;
+  background:var(--panel);
+  border:1px solid var(--line-soft);
+  border-radius:var(--radius);
+  display:flex;flex-direction:column;
+  max-height:calc(100vh - var(--head-h) - 30px);
+  overflow:hidden;
+}
+.dockhead{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:10px 12px 9px;border-bottom:1px dashed var(--line);
+}
+.dockhead .t{font-size:13px;font-weight:600;line-height:1.3}
+.dockhead .n{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pool{
+  flex:1 1 auto;min-height:70px;
+  overflow-y:auto;overscroll-behavior:contain;
+  padding:10px 12px 12px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.pool .tile{width:100%;padding:6px 9px}
+.pool .vtile{width:100%}
+.pool:empty::after{
+  content:'Word bank empty. Everything is placed.';
+  color:var(--muted);font-size:13px;padding:6px 2px;line-height:1.4;
+}
+
+/* ---------- overlay ---------- */
+.overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(18,34,38,.5);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(2px);
+}
+.overlay[hidden]{display:none}
+.sheet{
+  background:var(--panel);border-radius:14px;
+  max-width:560px;width:100%;max-height:86vh;overflow:auto;
+  padding:24px 26px 22px;
+  box-shadow:0 20px 60px rgba(10,25,30,.35);
+}
+.sheet h2{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:28px;margin:0 0 4px;letter-spacing:-.015em}
+.sheet .sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+.score{display:flex;gap:24px;flex-wrap:wrap;margin:0 0 18px;padding-bottom:18px;border-bottom:1px solid var(--line-soft)}
+.score div{display:flex;flex-direction:column}
+.score .k{font-size:12px;color:var(--muted)}
+.score .v{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15}
+.misslist{margin:0 0 18px;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.misslist li{
+  font-size:13.5px;padding:8px 10px;border-radius:7px;
+  background:var(--bad-bg);border-left:3px solid var(--bad);
+}
+.misslist li b{font-weight:600}
+.misslist li span{color:var(--muted)}
+.perfect{
+  font-size:13.5px;padding:10px 12px;border-radius:7px;margin-bottom:18px;
+  background:var(--ok-bg);border-left:3px solid var(--ok);
+}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  border:1px solid var(--accent);background:var(--accent);color:#fff;
+  border-radius:8px;padding:9px 15px;font-size:14px;font-weight:600;cursor:pointer;
+}
+.btn:hover{filter:brightness(1.08)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btn.sec{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.btn.sec:hover{border-color:var(--accent);color:var(--accent);filter:none}
+.key{margin-top:18px;border-top:1px solid var(--line-soft);padding-top:14px}
+.key h3{font-size:14px;margin:0 0 8px;font-weight:600}
+.key dl{margin:0;font-size:13px}
+.key dt{font-weight:600;margin-top:9px}
+.key dd{margin:1px 0 0;color:var(--muted)}
+
+.footnote{
+  margin:22px 0 0;padding:0;
+  font-size:12.5px;color:var(--muted);line-height:1.5;max-width:78ch;
+}
+.footnote b{color:var(--ink);font-weight:600}
+
+@media (max-width:900px){
+  body{padding-bottom:calc(var(--dock-h) + 14px)}
+  main{grid-template-columns:1fr}
+  .dock{
+    position:fixed;left:0;right:0;bottom:0;top:auto;z-index:50;
+    border:0;border-top:1px solid var(--line);border-radius:0;
+    box-shadow:0 -6px 20px rgba(20,40,45,.09);
+    max-height:none;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .dockhead{
+    width:100%;max-width:1180px;margin:0 auto;
+    border-bottom:0;padding:8px 16px 4px;
+  }
+  .pool{
+    width:100%;max-width:1180px;margin:0 auto;
+    flex-direction:row;flex-wrap:wrap;align-content:flex-start;
+    gap:7px;max-height:150px;padding:0 16px 12px;
+  }
+  .pool .tile{width:auto;min-width:150px;max-width:230px;flex:0 0 auto;padding:7px 10px}
+  .pool .vtile{width:auto}
+}
+@media (max-width:640px){
+  .hrow{padding:8px 12px;gap:9px}
+  .brand{font-size:19px}
+  main{padding:14px 12px}
+  .lede h1{font-size:24px}
+  .board{grid-template-columns:1fr}
+  .insulin-grid{grid-template-columns:1fr}
+  .pool{padding:0 12px 12px;max-height:140px}
+  .dockhead{padding:7px 12px 5px}
+  .pool .tile{min-width:132px;max-width:none;flex:1 1 132px}
+  .stats{font-size:12px;gap:11px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <div class="brand">Drug class <em>drill</em></div>
+    <div class="tabs" role="tablist" aria-label="Rounds">
+      <button class="tab" role="tab" data-round="endocrine" aria-selected="true">Endocrine</button>
+      <button class="tab" role="tab" data-round="gi" aria-selected="false">GI</button>
+      <button class="tab" role="tab" data-round="insulin" aria-selected="false">Insulin timing</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="stats">
+      <span class="stat">Placed <b id="s-placed">0</b>/<b id="s-total">0</b></span>
+      <span class="stat">Misses <b id="s-miss">0</b></span>
+      <span class="stat" id="s-timewrap">Time <b id="s-time">0:00</b></span>
+    </div>
+    <button class="ghostbtn" id="btn-counts" aria-pressed="false">Show counts</button>
+    <button class="ghostbtn" id="btn-restart">Restart</button>
+  </div>
+  <div class="progwrap"><div class="progbar" id="progbar"></div></div>
+</header>
+
+<main>
+  <aside class="dock" id="dock" aria-label="Word bank">
+    <div class="dockhead">
+      <span class="t" id="dock-title">Drag a drug into its class</span>
+      <span class="n" id="dock-count"></span>
+      <div class="spacer"></div>
+      <button class="ghostbtn" id="btn-shuffle">Shuffle</button>
+    </div>
+    <div class="pool" id="pool"></div>
+  </aside>
+  <div class="boardcol">
+    <div class="lede">
+      <h1 id="round-title">Endocrine</h1>
+      <p id="round-sub"></p>
+    </div>
+    <div id="board" class="board"></div>
+    <div class="footnote" id="footnote"></div>
+  </div>
+</main>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <h2 id="sheet-title">Round complete</h2>
+    <p class="sub" id="sheet-sub"></p>
+    <div class="score">
+      <div><span class="k">First-try accuracy</span><span class="v" id="r-acc">0%</span></div>
+      <div><span class="k">Wrong drops</span><span class="v" id="r-miss">0</span></div>
+      <div><span class="k">Time</span><span class="v" id="r-time">0:00</span></div>
+    </div>
+    <div id="r-body"></div>
+    <div class="actions">
+      <button class="btn" id="r-again">Play again</button>
+      <button class="btn sec" id="r-drill">Drill my misses</button>
+      <button class="btn sec" id="r-next">Next round</button>
+      <button class="btn sec" id="r-key">Show answer key</button>
+    </div>
+    <div class="key" id="r-keybox" hidden></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+
+const ENDOCRINE = {
+  title:'Endocrine',
+  sub:'Every diabetes and thyroid drug on the med list. Get the class right first, then the details follow.',
+  accent:'#1F4380',
+  accentSoft:'#E7ECF5',
+  note:'Insulin detemir (Levemir) sits under <b>intermediate duration</b> here because that is where your lecture slide puts it. Most other sources call it long-acting basal insulin, so answer per the slide on the exam and know the difference exists.',
+  bins:[
+    {id:'rapid', name:'Rapid-acting insulin', items:[
+      {g:'Lispro', b:'Humalog', f:'Onset 15-30 min. Give right before or even just after the meal.'},
+      {g:'Aspart', b:'NovoLog', f:'Give 5-10 min before the meal.'},
+      {g:'Glulisine', b:'Apidra', f:'Give 15 min before eating.'}
+    ]},
+    {id:'short', name:'Short-acting insulin', items:[
+      {g:'Regular insulin', b:'Humulin R, Novolin R', f:'The only insulin that can be safely given IV. Give 30-60 min before a meal.'}
+    ]},
+    {id:'intermediate', name:'Intermediate-acting insulin', items:[
+      {g:'NPH insulin', b:'Humulin N, Novolin N', f:'The only cloudy insulin, and the only one that can be mixed with short-acting insulins.'},
+      {g:'Insulin detemir', b:'Levemir', f:'Listed as intermediate on your slide. Commonly taught elsewhere as long-acting basal.'}
+    ]},
+    {id:'long', name:'Long-acting insulin', items:[
+      {g:'Insulin glargine', b:'Lantus', f:'No distinct peak. SC only, never mixed, never IV.'}
+    ]},
+    {id:'rescue', name:'Hypoglycemia rescue', items:[
+      {g:'Glucagon', b:'', f:'From pancreatic alpha cells. IM, SC, or IV. Follow with oral or IV glucose once awake.'}
+    ]},
+    {id:'sulfonylurea', name:'Sulfonylurea', items:[
+      {g:'Glyburide', b:'Micronase', f:'Stimulates insulin release. Contraindicated with sulfa allergy. Causes hypoglycemia.'}
+    ]},
+    {id:'meglitinide', name:'Meglitinide', items:[
+      {g:'Repaglinide', b:'Prandin', f:'Same job as a sulfonylurea but safe in sulfa allergy.'},
+      {g:'Nateglinide', b:'Starlix', f:'Hypoglycemia risk is higher in liver disease.'}
+    ]},
+    {id:'biguanide', name:'Biguanide', items:[
+      {g:'Metformin', b:'Glucophage', f:'Lowers hepatic glucose output, so no hypoglycemia alone. Hold 48 hr for IV contrast. Lactic acidosis risk.'}
+    ]},
+    {id:'agi', name:'Alpha-glucosidase inhibitor', items:[
+      {g:'Acarbose', b:'Precose', f:'Treat hypoglycemia with pure glucose, not table sugar. Avoid in IBD.'}
+    ]},
+    {id:'tzd', name:'Thiazolidinedione', items:[
+      {g:'Pioglitazone', b:'Actos', f:'Reduces insulin resistance. Fluid retention and weight gain, so caution in heart failure. Bladder cancer risk.'}
+    ]},
+    {id:'dpp4', name:'DPP-4 inhibitor (gliptin)', items:[
+      {g:'Sitagliptin', b:'Januvia', f:'Enhances incretin effect. Watch for pancreatitis.'}
+    ]},
+    {id:'amylin', name:'Amylin analog', items:[
+      {g:'Pramlintide', b:'Symlin', f:'Used with insulin in type 1 and type 2. SC before each meal.'}
+    ]},
+    {id:'glp1', name:'GLP-1 receptor agonist', items:[
+      {g:'Semaglutide', b:'Ozempic, Wegovy, Rybelsus', f:'GLP-1 only. Rybelsus is the oral form. Boxed warning for thyroid C-cell tumors.'}
+    ]},
+    {id:'dual', name:'Dual GIP/GLP-1 agonist', items:[
+      {g:'Tirzepatide', b:'Mounjaro, Zepbound', f:'The dual agonist. Generally produces greater weight loss than semaglutide.'}
+    ]},
+    {id:'thyroidrep', name:'Thyroid hormone replacement', items:[
+      {g:'Levothyroxine', b:'Synthroid, Levothroid, Levoxyl', f:'T4. Single PO dose each morning on an empty stomach, lifelong. Raises INR with warfarin.'},
+      {g:'Liothyronine', b:'Cytomel', f:'T3. Faster onset than levothyroxine but shorter half-life and duration.'}
+    ]},
+    {id:'antithyroid', name:'Antithyroid drug', items:[
+      {g:'Propylthiouracil', b:'PTU', f:'Blocks synthesis and blocks T4 to T3 conversion. Preferred in pregnancy. Watch for agranulocytosis.'},
+      {g:'Methimazole', b:'Tapazole', f:'Longer half-life so less frequent dosing, but crosses the placenta and has slower onset.'}
+    ]}
+  ]
+};
+
+const GI = {
+  title:'Gastrointestinal',
+  sub:'Antiemetics, antidiarrheals, laxatives, and the acid drugs. Nineteen classes, thirty-four drugs.',
+  accent:'#5C3676',
+  accentSoft:'#F0E9F5',
+  note:'<b>Meclizine (Antivert)</b> is included with the antihistamines. It appears in the lecture slides but not on the final med list, so it is a bonus rather than a guaranteed test item.',
+  bins:[
+    {id:'anticholinergic', name:'Anticholinergic', items:[
+      {g:'Scopolamine', b:'Transderm-Scop', f:'72-hour patch releasing 1 mg. Contraindicated in glaucoma because it raises intraocular pressure.'}
+    ]},
+    {id:'antihistamine', name:'Antihistamine (H1 blocker)', items:[
+      {g:'Dimenhydrinate', b:'Dramamine', f:'Motion sickness. Works on the vestibular pathway.'},
+      {g:'Diphenhydramine', b:'Benadryl', f:'Also used for cough, allergy, and sedation.'},
+      {g:'Hydroxyzine', b:'Vistaril', f:'PO or IM only. Never give IV.'},
+      {g:'Meclizine', b:'Antivert', f:'Motion sickness and vertigo.'}
+    ]},
+    {id:'glucocorticoid', name:'Glucocorticoid', items:[
+      {g:'Dexamethasone', b:'Decadron', f:'IV for chemo-associated emesis. Reduces tumor swelling and lifts mood and appetite.'},
+      {g:'Methylprednisolone', b:'Solu-Medrol', f:'IV, same chemo indication.'}
+    ]},
+    {id:'dopamine', name:'Dopamine antagonist', items:[
+      {g:'Prochlorperazine', b:'Compazine', f:'Blocks dopamine in the CTZ. Sedation, hypotension, mild anticholinergic effects.'},
+      {g:'Promethazine', b:'Phenergan', f:'PO and IM preferred. IV common but not preferred, and push slowly.'}
+    ]},
+    {id:'prokinetic', name:'Prokinetic', items:[
+      {g:'Metoclopramide', b:'Reglan', f:'Also treats gastroparesis. Long-term use causes tardive dyskinesia. Contraindicated in Parkinson disease.'}
+    ]},
+    {id:'serotonin', name:'Serotonin antagonist', items:[
+      {g:'Ondansetron', b:'Zofran', f:'Post-op and chemo nausea. Watch QT prolongation.'}
+    ]},
+    {id:'cannabinoid', name:'Cannabinoid', items:[
+      {g:'Dronabinol', b:'Marinol', f:'Suppresses the CTZ and stimulates appetite. Contraindicated in psychiatric disorders.'}
+    ]},
+    {id:'adsorbent', name:'Antidiarrheal: adsorbent', items:[
+      {g:'Bismuth subsalicylate', b:'Pepto-Bismol', f:'Never for children or teens with flu or chickenpox. Reye syndrome risk.'},
+      {g:'Cholestyramine', b:'Questran', f:'Coats the GI tract and slows motility. Reduces absorption of many drugs.'}
+    ]},
+    {id:'antimotility', name:'Antidiarrheal: antimotility', items:[
+      {g:'Diphenoxylate with atropine', b:'Lomotil', f:'Atropine is added to deter abuse. Contraindicated in glaucoma.'},
+      {g:'Loperamide', b:'Imodium', f:'Do not use beyond 2 days or if fever is present.'}
+    ]},
+    {id:'probiotic', name:'Probiotic', items:[
+      {g:'L. acidophilus', b:'', f:'Restores normal flora. Used for antibiotic-induced diarrhea.'}
+    ]},
+    {id:'osmotic', name:'Osmotic laxative', items:[
+      {g:'Polyethylene glycol', b:'GoLYTELY, MiraLAX', f:'Pulls water into the colon. Watch fluid and electrolyte shifts, hypotension, weakness.'},
+      {g:'Lactulose', b:'Chronulac', f:'Also lowers serum ammonia in hepatic encephalopathy.'}
+    ]},
+    {id:'stimulant', name:'Stimulant laxative', items:[
+      {g:'Bisacodyl', b:'Dulcolax', f:'Give with water, not milk or juice. PO works in 6-12 hr, rectal in 15-60 min.'},
+      {g:'Senna', b:'Senokot', f:'Turns urine reddish brown. Warn the patient so they are not alarmed.'}
+    ]},
+    {id:'bulk', name:'Bulk-forming laxative', items:[
+      {g:'Psyllium', b:'Metamucil', f:'Stir and drink immediately, then follow with a full glass of water. Works in 8-12 hr.'},
+      {g:'Methylcellulose', b:'Citrucel', f:'Needs at least 8 oz of water or it can cause impaction or esophageal blockage.'}
+    ]},
+    {id:'emollient', name:'Emollient (stool softener)', items:[
+      {g:'Docusate sodium', b:'Colace', f:'Reduces straining after surgery or MI.'}
+    ]},
+    {id:'antacid', name:'Antacid', items:[
+      {g:'Aluminum salts', b:'Basaljel, Maalox', f:'Constipating. Preferred in renal disease because it is more easily excreted.'},
+      {g:'Magnesium hydroxide', b:'Milk of Magnesia', f:'Causes diarrhea, which is why it is combined with aluminum. Dangerous in renal failure.'},
+      {g:'Calcium carbonate', b:'Tums', f:'Kidney stones, gas, and rebound hyperacidity. Also a dietary calcium source.'},
+      {g:'Sodium bicarbonate', b:'Alka-Seltzer', f:'Fast onset, short duration. Sodium load is a problem in heart failure and hypertension.'}
+    ]},
+    {id:'antiflatulent', name:'Antiflatulent', items:[
+      {g:'Simethicone', b:'Gas-X, Mylicon', f:'Alters gas bubble surface tension so bubbles coalesce and pass.'}
+    ]},
+    {id:'h2', name:'H2 receptor antagonist', items:[
+      {g:'Cimetidine', b:'Tagamet', f:'Largely replaced by famotidine because of drug interactions. Confusion in elderly patients.'},
+      {g:'Famotidine', b:'Pepcid', f:'Safer choice. Thrombocytopenia and anaphylaxis reported. Take 1-2 hr before an antacid.'}
+    ]},
+    {id:'ppi', name:'Proton pump inhibitor', items:[
+      {g:'Omeprazole', b:'Prilosec', f:'Irreversibly binds H+/K+ ATPase. Take on an empty stomach.'},
+      {g:'Pantoprazole', b:'Protonix', f:'Long-term risks: C. difficile, pneumonia, fractures, low magnesium.'}
+    ]},
+    {id:'pepsin', name:'Pepsin inhibitor (mucosal protectant)', items:[
+      {g:'Sucralfate', b:'Carafate', f:'Liquid bandage over the ulcer. Give 30 min before meals and at bedtime.'}
+    ]}
+  ]
+};
+
+const INSULIN = {
+  title:'Insulin timing',
+  sub:'Drop the onset and the peak onto each insulin. Duration fills in once the card is complete.',
+  accent:'#0F5C52',
+  accentSoft:'#E3EFEC',
+  note:'<b>Insulin detemir (Levemir)</b> is not in this round because your slides never give its onset, peak, or duration. If it shows up on the exam, it will be a class question, not a timing question.',
+  items:[
+    {id:'lispro', name:'Lispro', brand:'Humalog', cls:'Rapid-acting', onset:'15-30 min', peak:'0.5-2.5 hr', dur:'3-6 hr'},
+    {id:'aspart', name:'Aspart', brand:'NovoLog', cls:'Rapid-acting', onset:'10-20 min', peak:'1-5 hr', dur:'3-5 hr'},
+    {id:'glulisine', name:'Glulisine', brand:'Apidra', cls:'Rapid-acting', onset:'10-15 min', peak:'1-1.5 hr', dur:'3-5 hr'},
+    {id:'regular', name:'Regular insulin', brand:'Humulin R, Novolin R', cls:'Short-acting', onset:'30 min-1 hr', peak:'1-5 hr', dur:'6-10 hr'},
+    {id:'nph', name:'NPH insulin', brand:'Humulin N, Novolin N', cls:'Intermediate', onset:'1-2 hr', peak:'6-14 hr', dur:'16-24 hr'},
+    {id:'glargine', name:'Insulin glargine', brand:'Lantus', cls:'Long-acting', onset:'70 min', peak:'No distinct peak', dur:'24 hr'}
+  ]
+};
+
+const ROUNDS = {endocrine:ENDOCRINE, gi:GI, insulin:INSULIN};
+const ORDER = ['endocrine','gi','insulin'];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+
+const $ = s => document.querySelector(s);
+let S = null;
+let showCounts = false;
+let tick = null;
+
+function shuffle(a){
+  a = a.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function fmt(ms){
+  const s = Math.floor(ms/1000);
+  return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+}
+
+/* ============================================================
+   ROUND SETUP
+   ============================================================ */
+
+function startRound(key, only){
+  const R = ROUNDS[key];
+  document.documentElement.style.setProperty('--accent', R.accent);
+  document.documentElement.style.setProperty('--accent-soft', R.accentSoft);
+
+  S = {key, R, kind: key==='insulin' ? 'insulin' : 'class',
+       placed:0, total:0, misses:0, selected:null, t0:Date.now(), done:false,
+       errors:new Map()};
+
+  $('#round-title').textContent = R.title;
+  $('#round-sub').textContent = R.sub;
+  $('#footnote').innerHTML = R.note ? 'Note. '+R.note : '';
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', String(t.dataset.round===key)));
+  $('#btn-counts').style.display = S.kind==='class' ? '' : 'none';
+
+  if(S.kind==='class') buildClassRound(R, only); else buildInsulinRound(R, only);
+
+  $('#s-total').textContent = S.total;
+  updateStats();
+  clearInterval(tick);
+  tick = setInterval(()=>{ if(!S.done) $('#s-time').textContent = fmt(Date.now()-S.t0); },500);
+  $('#s-time').textContent='0:00';
+  window.scrollTo({top:0});
+}
+
+function buildClassRound(R, only){
+  const board = $('#board');
+  board.className = 'board';
+  board.innerHTML = '';
+  const pool = $('#pool');
+  pool.className = 'pool';
+  pool.innerHTML = '';
+
+  const useBins = only ? R.bins.filter(b=>b.items.some(i=>only.has(i.g))) : R.bins;
+  const tiles = [];
+
+  useBins.forEach(bin=>{
+    const el = document.createElement('div');
+    el.className = 'bin';
+    el.dataset.bin = bin.id;
+    el.tabIndex = 0;
+    el.setAttribute('role','button');
+    const items = only ? bin.items.filter(i=>only.has(i.g)) : bin.items;
+    el.dataset.need = items.length;
+    el.innerHTML =
+      '<div class="binhead"><span class="binname">'+bin.name+'</span>'+
+      '<span class="bincount" data-count>'+(showCounts? '0/'+items.length : '')+'</span></div>'+
+      '<div class="bindrop"><div class="emptyhint">Drop here</div></div>';
+    board.appendChild(el);
+    items.forEach(it=> tiles.push({...it, bin:bin.id, binName:bin.name}));
+  });
+
+  S.total = tiles.length;
+  shuffle(tiles).forEach(t=>pool.appendChild(makeTile(t)));
+  $('#dock-title').textContent = 'Drag a drug into its class';
+  refreshDock();
+}
+
+function makeTile(t){
+  const b = document.createElement('button');
+  b.type='button';
+  b.className='tile';
+  b.dataset.bin = t.bin;
+  b.dataset.g = t.g;
+  b.dataset.fact = t.f || '';
+  b.dataset.binName = t.binName;
+  b.innerHTML = '<span class="g">'+t.g+'</span>'+(t.b?'<span class="b">'+t.b+'</span>':'');
+  b.setAttribute('aria-label', t.g + (t.b? ', '+t.b : ''));
+  attachDrag(b);
+  return b;
+}
+
+function buildInsulinRound(R, only){
+  const board = $('#board');
+  board.className = 'insulin-grid';
+  board.innerHTML='';
+  const pool = $('#pool');
+  pool.className='pool values';
+  pool.innerHTML='';
+
+  const use = only ? R.items.filter(i=>only.has(i.id)) : R.items;
+  const vals = [];
+
+  use.forEach(ins=>{
+    const c = document.createElement('div');
+    c.className='icard';
+    c.dataset.ins = ins.id;
+    c.innerHTML =
+      '<h3>'+ins.name+'</h3>'+
+      '<div class="cls">'+ins.brand+' &middot; '+ins.cls+'</div>'+
+      '<div class="slots">'+
+        slotHTML(ins.id,'onset','Onset')+
+        slotHTML(ins.id,'peak','Peak')+
+      '</div>'+
+      '<div class="dur" hidden><span>Duration</span><b>'+ins.dur+'</b></div>';
+    board.appendChild(c);
+    vals.push({v:ins.onset, ins:ins.id}, {v:ins.peak, ins:ins.id});
+  });
+
+  S.total = vals.length;
+  shuffle(vals).forEach(v=>pool.appendChild(makeVTile(v.v)));
+  $('#dock-title').textContent = 'Drag each time onto the right insulin';
+  refreshDock();
+}
+function slotHTML(ins,kind,label){
+  return '<div class="slot" tabindex="0" role="button" data-ins="'+ins+'" data-kind="'+kind+'" '+
+         'aria-label="'+label+' for this insulin, empty">'+
+         '<span class="lbl">'+label+'</span><span class="val">&mdash;</span></div>';
+}
+function makeVTile(v){
+  const b=document.createElement('button');
+  b.type='button';
+  b.className='vtile';
+  b.dataset.val=v;
+  b.textContent=v;
+  attachDrag(b);
+  return b;
+}
+
+/* ============================================================
+   PLACEMENT LOGIC
+   ============================================================ */
+
+function correctTarget(tile, target){
+  if(S.kind==='class') return tile.dataset.bin === target.dataset.bin;
+  const ins = INSULIN.items.find(i=>i.id===target.dataset.ins);
+  if(!ins) return false;
+  if(target.classList.contains('filled')) return false;
+  return ins[target.dataset.kind] === tile.dataset.val;
+}
+
+function place(tile, target){
+  if(S.kind==='class'){
+    const drop = target.querySelector('.bindrop');
+    const hint = drop.querySelector('.emptyhint');
+    if(hint) hint.remove();
+    tile.classList.remove('selected','lifted');
+    tile.classList.add('placed','pop');
+    tile.disabled = true;
+    tile.style.width='';
+    drop.appendChild(tile);
+    if(tile.dataset.fact){
+      const f=document.createElement('div');
+      f.className='fact';
+      f.textContent=tile.dataset.fact;
+      drop.appendChild(f);
+    }
+    const have = drop.querySelectorAll('.tile').length;
+    const need = +target.dataset.need;
+    const c = target.querySelector('[data-count]');
+    if(showCounts) c.textContent = have+'/'+need;
+    if(have===need) target.classList.add('solved');
+  } else {
+    target.classList.add('filled');
+    target.querySelector('.val').textContent = tile.dataset.val;
+    target.setAttribute('aria-label', target.querySelector('.lbl').textContent+' '+tile.dataset.val);
+    tile.remove();
+    const card = target.closest('.icard');
+    if(card.querySelectorAll('.slot.filled').length===2){
+      card.classList.add('solved');
+      card.querySelector('.dur').hidden=false;
+    }
+  }
+  S.placed++;
+  updateStats();
+  refreshDock();
+  if(S.placed===S.total) finish();
+}
+
+function missed(tile, target){
+  S.misses++;
+  const k = S.kind==='class' ? tile.dataset.g : tile.dataset.val;
+  const rec = S.errors.get(k) || {n:0, label:k, right: S.kind==='class' ? tile.dataset.binName : ownerOf(tile.dataset.val), wrong:new Set()};
+  rec.n++;
+  rec.wrong.add(S.kind==='class' ? target.querySelector('.binname').textContent
+                                 : target.closest('.icard').querySelector('h3').textContent+' '+target.dataset.kind);
+  S.errors.set(k, rec);
+  target.classList.add('rejecting');
+  setTimeout(()=>target.classList.remove('rejecting'),320);
+  updateStats();
+}
+function ownerOf(val){
+  return INSULIN.items.filter(i=>i.onset===val||i.peak===val)
+    .map(i=>i.name+' '+(i.onset===val?'onset':'peak')).join(' or ');
+}
+
+function updateStats(){
+  $('#s-placed').textContent=S.placed;
+  $('#s-miss').textContent=S.misses;
+  $('#progbar').style.width = (S.total? (S.placed/S.total*100):0)+'%';
+}
+function refreshDock(){
+  const left = $('#pool').children.length;
+  $('#dock-count').textContent = left ? left+' left' : '';
+}
+
+/* ============================================================
+   DRAG (pointer based, works on touch and mouse)
+   ============================================================ */
+
+let drag = null;
+let scrollRAF = null;
+
+function targetsSelector(){ return S.kind==='class' ? '.bin' : '.slot'; }
+
+function attachDrag(el){
+  el.addEventListener('pointerdown', onDown);
+  el.addEventListener('keydown', e=>{
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggleSelect(el); }
+  });
+}
+
+function toggleSelect(el){
+  if(el.classList.contains('placed')) return;
+  const cur = S.selected;
+  if(cur) cur.classList.remove('selected');
+  S.selected = (cur===el) ? null : el;
+  if(S.selected) S.selected.classList.add('selected');
+}
+
+function onDown(e){
+  if(e.button!==undefined && e.button!==0) return;
+  const el = e.currentTarget;
+  if(el.classList.contains('placed')) return;
+  const rect = el.getBoundingClientRect();
+  drag = {
+    el, startX:e.clientX, startY:e.clientY, moved:false,
+    home:{left:rect.left, top:rect.top, w:rect.width},
+    offX:e.clientX-rect.left, offY:e.clientY-rect.top,
+    ghost:null, over:null
+  };
+  document.addEventListener('pointermove', onMove, {passive:false});
+  document.addEventListener('pointerup', onUp);
+  document.addEventListener('pointercancel', onUp);
+}
+
+function onMove(e){
+  if(!drag) return;
+  const dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+  if(!drag.moved && Math.hypot(dx,dy) < 6) return;
+
+  if(!drag.moved){
+    drag.moved = true;
+    e.preventDefault();
+    const g = drag.el.cloneNode(true);
+    g.classList.add('ghost');
+    g.classList.remove('selected');
+    g.style.width = drag.home.w+'px';
+    g.style.left = drag.home.left+'px';
+    g.style.top = drag.home.top+'px';
+    document.body.appendChild(g);
+    drag.ghost = g;
+    drag.el.classList.add('lifted');
+    if(S.selected){ S.selected.classList.remove('selected'); S.selected=null; }
+    startAutoScroll();
+  }
+  e.preventDefault();
+  drag.ghost.style.left = (e.clientX-drag.offX)+'px';
+  drag.ghost.style.top  = (e.clientY-drag.offY)+'px';
+  drag.px = e.clientX; drag.py = e.clientY;
+
+  const under = document.elementFromPoint(e.clientX, e.clientY);
+  const t = under && under.closest ? under.closest(targetsSelector()) : null;
+  if(t !== drag.over){
+    if(drag.over) drag.over.classList.remove('over');
+    drag.over = (t && !(t.classList.contains('filled'))) ? t : null;
+    if(drag.over) drag.over.classList.add('over');
+  }
+}
+
+function onUp(){
+  document.removeEventListener('pointermove', onMove);
+  document.removeEventListener('pointerup', onUp);
+  document.removeEventListener('pointercancel', onUp);
+  stopAutoScroll();
+  if(!drag) return;
+  const d = drag; drag = null;
+
+  if(!d.moved){ toggleSelect(d.el); return; }
+  if(d.over) d.over.classList.remove('over');
+
+  const target = d.over;
+  if(target && correctTarget(d.el, target)){
+    d.ghost.remove();
+    d.el.classList.remove('lifted');
+    place(d.el, target);
+    return;
+  }
+  if(target) missed(d.el, target);
+  // shake red, then fly home
+  d.ghost.classList.add('wrong');
+  setTimeout(()=>{
+    const home = d.el.getBoundingClientRect();
+    d.ghost.classList.add('returning');
+    d.ghost.style.left = home.left+'px';
+    d.ghost.style.top  = home.top+'px';
+    d.ghost.style.transform = 'rotate(0deg) scale(1)';
+    setTimeout(()=>{ d.ghost.remove(); d.el.classList.remove('lifted'); }, 270);
+  }, target ? 320 : 40);
+}
+
+function startAutoScroll(){
+  const dockEl = $('#dock'), poolEl = $('#pool');
+  const step = ()=>{
+    if(!drag){ scrollRAF=null; return; }
+    const x = drag.px, y = drag.py, h = window.innerHeight;
+    const pr = poolEl.getBoundingClientRect();
+
+    // inside the word bank: scroll the bank itself
+    if(x>=pr.left && x<=pr.right && y>=pr.top-6 && y<=pr.bottom+6){
+      if(y < pr.top+44) poolEl.scrollTop -= 11;
+      else if(y > pr.bottom-44) poolEl.scrollTop += 11;
+      scrollRAF = requestAnimationFrame(step);
+      return;
+    }
+
+    // over the board: scroll the page
+    const docked = getComputedStyle(dockEl).position === 'fixed';
+    const bottomEdge = docked ? h - dockEl.offsetHeight : h;
+    const topEdge = ($('header').offsetHeight || 62) + 46;
+    if(y < topEdge) window.scrollBy(0, -Math.ceil((topEdge-y)/6)-3);
+    else if(y > bottomEdge-56) window.scrollBy(0, Math.ceil((y-(bottomEdge-56))/5)+2);
+    scrollRAF = requestAnimationFrame(step);
+  };
+  if(!scrollRAF) scrollRAF = requestAnimationFrame(step);
+}
+function stopAutoScroll(){ if(scrollRAF){cancelAnimationFrame(scrollRAF); scrollRAF=null;} }
+
+/* click-to-place fallback */
+document.addEventListener('click', e=>{
+  if(!S || !S.selected) return;
+  const t = e.target.closest(targetsSelector());
+  if(!t) return;
+  if(S.kind==='insulin' && t.classList.contains('filled')) return;
+  const tile = S.selected;
+  if(correctTarget(tile,t)){ tile.classList.remove('selected'); S.selected=null; place(tile,t); }
+  else{
+    missed(tile,t);
+    tile.classList.add('selected');
+  }
+});
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+
+function finish(){
+  S.done = true;
+  clearInterval(tick);
+  const ms = Date.now()-S.t0;
+  const firstTry = S.total - S.errors.size;
+  const acc = Math.round(firstTry/S.total*100);
+
+  $('#sheet-title').textContent = S.R.title + ' complete';
+  $('#sheet-sub').textContent = firstTry===S.total
+    ? 'Clean run. Every tile landed on the first try.'
+    : firstTry+' of '+S.total+' landed on the first try.';
+  $('#r-acc').textContent = acc+'%';
+  $('#r-miss').textContent = S.misses;
+  $('#r-time').textContent = fmt(ms);
+
+  const body = $('#r-body');
+  if(S.errors.size===0){
+    body.innerHTML = '<div class="perfect">Nothing to re-drill. Move on to the next round or run this one again for speed.</div>';
+    $('#r-drill').style.display='none';
+  } else {
+    $('#r-drill').style.display='';
+    const ul=document.createElement('ul');
+    ul.className='misslist';
+    [...S.errors.values()].sort((a,b)=>b.n-a.n).forEach(r=>{
+      const li=document.createElement('li');
+      li.innerHTML='<b>'+r.label+'</b> belongs in <b>'+r.right+'</b><br><span>You tried: '+[...r.wrong].join(', ')+'</span>';
+      ul.appendChild(li);
+    });
+    body.innerHTML='';
+    body.appendChild(ul);
+  }
+  $('#r-keybox').hidden = true;
+  $('#r-keybox').innerHTML = '';
+  $('#r-next').style.display = ORDER.indexOf(S.key) < ORDER.length-1 ? '' : 'none';
+  $('#overlay').hidden = false;
+  $('#r-again').focus();
+}
+
+function buildKey(){
+  const box = $('#r-keybox');
+  let html = '<h3>Answer key</h3><dl>';
+  if(S.kind==='class'){
+    S.R.bins.forEach(b=>{
+      html += '<dt>'+b.name+'</dt><dd>'+b.items.map(i=>i.g+(i.b?' ('+i.b+')':'')).join(' &middot; ')+'</dd>';
+    });
+  } else {
+    INSULIN.items.forEach(i=>{
+      html += '<dt>'+i.name+' ('+i.brand+')</dt><dd>Onset '+i.onset+' &middot; Peak '+i.peak+' &middot; Duration '+i.dur+'</dd>';
+    });
+  }
+  box.innerHTML = html+'</dl>';
+  box.hidden=false;
+}
+
+/* ============================================================
+   CONTROLS
+   ============================================================ */
+
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{ $('#overlay').hidden=true; startRound(t.dataset.round); });
+});
+$('#btn-restart').addEventListener('click',()=>{ $('#overlay').hidden=true; startRound(S.key); });
+$('#btn-shuffle').addEventListener('click',()=>{
+  const pool=$('#pool');
+  shuffle([...pool.children]).forEach(c=>pool.appendChild(c));
+});
+$('#btn-counts').addEventListener('click',e=>{
+  showCounts=!showCounts;
+  e.currentTarget.setAttribute('aria-pressed',String(showCounts));
+  e.currentTarget.textContent = showCounts?'Hide counts':'Show counts';
+  document.querySelectorAll('.bin').forEach(b=>{
+    const have=b.querySelectorAll('.bindrop .tile').length;
+    b.querySelector('[data-count]').textContent = showCounts ? have+'/'+b.dataset.need : '';
+  });
+});
+$('#r-again').addEventListener('click',()=>{ $('#overlay').hidden=true; startRound(S.key); });
+$('#r-next').addEventListener('click',()=>{
+  const i=ORDER.indexOf(S.key);
+  $('#overlay').hidden=true;
+  startRound(ORDER[Math.min(i+1,ORDER.length-1)]);
+});
+$('#r-drill').addEventListener('click',()=>{
+  const keys=[...S.errors.keys()];
+  const only=new Set();
+  if(S.kind==='class'){ keys.forEach(k=>only.add(k)); }
+  else{
+    INSULIN.items.forEach(i=>{ if(keys.includes(i.onset)||keys.includes(i.peak)) only.add(i.id); });
+  }
+  $('#overlay').hidden=true;
+  startRound(S.key, only);
+});
+$('#r-key').addEventListener('click',buildKey);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(!$('#overlay').hidden) $('#overlay').hidden=true;
+    else if(S && S.selected){ S.selected.classList.remove('selected'); S.selected=null; }
+  }
+});
+
+/* keep layout in sync with header and dock heights */
+const dock=$('#dock');
+new ResizeObserver(()=>{
+  document.documentElement.style.setProperty('--dock-h', dock.offsetHeight+'px');
+}).observe(dock);
+new ResizeObserver(()=>{
+  document.documentElement.style.setProperty('--head-h', $('header').offsetHeight+'px');
+}).observe($('header'));
+
+startRound('endocrine');
+</script>
+</body>
+</html>
